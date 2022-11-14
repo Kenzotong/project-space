@@ -31,7 +31,7 @@ public class ExampleCode {
 
     public static void main(String[] args) {
         // Create scenario based on config file
-        String configPath = "/path/to/config/file";
+        String configPath = "D:/github/project-space/scenarios/vulkaneifel/config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -67,12 +67,12 @@ public class ExampleCode {
                     double departureTime = trip.getOriginActivity().getEndTime().orElseThrow(RuntimeException::new);
 
                     // When link id is written in th plan
-                    Link fromLink = network.getLinks().get(trip.getOriginActivity().getLinkId());
-                    Link toLink = network.getLinks().get(trip.getDestinationActivity().getLinkId());
+//                    Link fromLink = network.getLinks().get(trip.getOriginActivity().getLinkId());
+//                    Link toLink = network.getLinks().get(trip.getDestinationActivity().getLinkId());
 
                     // When link id is not provided (coordinate is provided instead)
-//                    Link fromLink = NetworkUtils.getNearestLink(network, trip.getOriginActivity().getCoord());
-//                    Link toLink = NetworkUtils.getNearestLink(network, trip.getDestinationActivity().getCoord());
+                    Link fromLink = NetworkUtils.getNearestLink(network, trip.getOriginActivity().getCoord());
+                    Link toLink = NetworkUtils.getNearestLink(network, trip.getDestinationActivity().getCoord());
 
                     // Calculate route
                     VrpPathWithTravelData path = VrpPaths.calcAndCreatePath(fromLink, toLink, departureTime, router, travelTime);
