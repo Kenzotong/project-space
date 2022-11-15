@@ -27,8 +27,10 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class caculateShareability {
 
@@ -62,8 +64,23 @@ public class caculateShareability {
         int numberOfShare = 0;
         int numberOfDrtTrip = 0;
 
-        List<TripStructureUtils.Trip> drtTripList = createTrips.drtTripList;
 
+        MainModeIdentifier mainModeIdentifier = new DefaultAnalysisMainModeIdentifier();
+
+        List<TripStructureUtils.Trip> drtTripSet = new ArrayList<>();
+
+        for(Person person : population.getPersons().values()) {
+            List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(person.getSelectedPlan());
+            for (TripStructureUtils.Trip drtTrip : trips) {
+                //判断主要交通工具 是不是drt
+                if (mainModeIdentifier.identifyMainMode(drtTrip.getTripElements()).equals(TransportMode.drt)) {
+                    //若是，则把这段trip添加进drt的trip合集中
+                    drtTripSet.add(drtTrip);
+                }
+            }
+        }
+        //number of drt trips
+        System.out.println(drtTripSet.size());
         //trip有问题
 
 //        for (Person person : population.getPersons().values()) {
@@ -71,16 +88,13 @@ public class caculateShareability {
 //
 //        }
 
-        //get drt trip set 1 必须要先建立drt的set 不可以是all set ，而且需要把list转为map。list只是一行数据，map是整个数据集
+        //必须要先建立drt的set 不可以是all set ，而且需要把list转为map。list只是一行数据，map是整个数据集
         //trip是使用某种交通工具的一段路，trips是一个人一趟旅程中（或者一个plan中）所有的交通方式合集
 
-        for (TripStructureUtils.Trip trip1 : drtTripList) {
-            numberOfShare++;
-
+        //get drt trip set 1
+        for (TripStructureUtils.Trip trip1 : drtTripSet) {
             //get drt trip set 2
-            for (TripStructureUtils.Trip trip2 : drtTripList) {
-                numberOfShare++;
-
+            for (TripStructureUtils.Trip trip2 : drtTripSet) {
                 // get OD link
                 // When link id is written in the plan
 //                Link fromLink1 = network.getLinks().get(trip1.getOriginActivity().getLinkId());
@@ -133,7 +147,6 @@ public class caculateShareability {
                 //determine if it is shareable
                 //if trip 1 is the same as trip 2
                 if (trip1 == trip2) {
-                    System.out.println("未配对");
                     continue;
                 }
                 //o1,o2,d1,d2
@@ -141,7 +154,6 @@ public class caculateShareability {
                     if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD1) {
                         if (departureTime2 + (alpha * tripTimeO2ToD2) + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD1 + tripTimeD1ToD2_1) {
                             numberOfShare ++;
-                            System.out.println("已配对1");
                             continue;
                         }
                     }
@@ -151,7 +163,6 @@ public class caculateShareability {
                     if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD2) {
                         if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD2 + tripTimeD2ToD1_1) {
                             numberOfShare ++;
-                            System.out.println("已配对2");
                             continue;
                         }
                     }
@@ -160,7 +171,6 @@ public class caculateShareability {
                         if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD1) {
                             if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD1 + tripTimeD1ToD2_2) {
                                 numberOfShare ++;
-                                System.out.println("已配对3");
                                 continue;
                             }
                         }
@@ -170,19 +180,15 @@ public class caculateShareability {
                         if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD2) {
                             if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD2 + tripTimeD2ToD1_2) {
                                 numberOfShare ++;
-                                System.out.println("已配对4");
                             }
                         }
                     }
                 }
             }
-//            for (Person person : population.getPersons().values()) {
-//                List<TripStructureUtils.Trip> trips_2 = TripStructureUtils.getTrips(person.getSelectedPlan());
-//                numberOfDrtTrip++;
-//                System.out.println("number of trips is: " + numberOfDrtTrip);
-//            }
         }
+
         System.out.println("number of pairs is: " + numberOfShare);
+
     }
 }
 

@@ -65,6 +65,7 @@ public class ExampleCode {
                 if (mainModeIdentifier.identifyMainMode(trip.getTripElements()).equals(TransportMode.drt)) {
                     // here we have the drt trip
                     double departureTime = trip.getOriginActivity().getEndTime().orElseThrow(RuntimeException::new);
+//                    System.out.println(trip);
 
                     // When link id is written in th plan
 //                    Link fromLink = network.getLinks().get(trip.getOriginActivity().getLinkId());
@@ -78,9 +79,9 @@ public class ExampleCode {
                     VrpPathWithTravelData path = VrpPaths.calcAndCreatePath(fromLink, toLink, departureTime, router, travelTime);
                     double tripTime = path.getTravelTime();
                     double distance = VrpPaths.calcDistance(path);
-                    System.out.println("Person " + person.getId().toString());
-                    System.out.println("Trip time = " + tripTime + ", Trip distance = " + distance);
-                    System.out.println("=========================================================");
+//                    System.out.println("Person " + person.getId().toString());
+//                    System.out.println("Trip time = " + tripTime + ", Trip distance = " + distance);
+//                    System.out.println("=========================================================");
                 }
             }
         }
