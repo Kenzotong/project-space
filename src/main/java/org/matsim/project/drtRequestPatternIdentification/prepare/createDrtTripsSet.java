@@ -16,13 +16,11 @@ import org.matsim.core.scenario.ScenarioUtils;
 import java.util.*;
 
 public class createDrtTripsSet {
-    public static void main(String[] args){
-        // Create scenario based on config file
-        String configPath = "D:/github/project-space/scenarios/vulkaneifel/config.xml";
-        if (args.length != 0) {
-            configPath = args[0];
-        }
 
+    private static final List<TripStructureUtils.Trip> drtTripSet = new ArrayList<>();
+
+    public static List<TripStructureUtils.Trip> getDrtTripSet(){
+        String configPath = "D:/github/project-space/scenarios/vulkaneifel/config.xml";
         Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
         Population population = scenario.getPopulation();
@@ -31,7 +29,8 @@ public class createDrtTripsSet {
 
         //所有人使用drt的trip合集
         for(Person person : population.getPersons().values()) {
-            trips = TripStructureUtils.getTrips(person.getSelectedPlan());
+            //all trips of a person
+            List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(person.getSelectedPlan());
             for (TripStructureUtils.Trip drtTrip : trips) {
                 //判断主要交通工具 是不是drt
                 if (mainModeIdentifier.identifyMainMode(drtTrip.getTripElements()).equals(TransportMode.drt)) {
@@ -40,14 +39,6 @@ public class createDrtTripsSet {
                 }
             }
         }
-    }
-
-    //all trips of a person
-    public static List<TripStructureUtils.Trip> trips = new ArrayList<>();
-
-    public static List<TripStructureUtils.Trip> drtTripSet = new ArrayList<>();
-
-    public static List<TripStructureUtils.Trip> getDrtTripSet(){
         return drtTripSet;
     }
 }
