@@ -15,11 +15,14 @@ import org.matsim.core.scenario.ScenarioUtils;
 
 import java.util.*;
 
-public class createDrtTripsSet {
-
-    private static final List<TripStructureUtils.Trip> drtTripSet = new ArrayList<>();
+public class DrtTripsSet {
+    public static void main(String[] args){
+        System.out.println(getDrtTripSet().size());
+    }
 
     public static List<TripStructureUtils.Trip> getDrtTripSet(){
+        List<TripStructureUtils.Trip> drtTripSet = new ArrayList<>();
+
         String configPath = "D:/github/project-space/scenarios/vulkaneifel/config.xml";
         Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
