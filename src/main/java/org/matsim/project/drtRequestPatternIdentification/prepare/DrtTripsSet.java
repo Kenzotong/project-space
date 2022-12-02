@@ -30,14 +30,14 @@ public class DrtTripsSet {
 
         MainModeIdentifier mainModeIdentifier = new DefaultAnalysisMainModeIdentifier();
 
-        //所有人使用drt的trip合集
+        //a trip set including all drt trips
         for(Person person : population.getPersons().values()) {
-            //all trips of a person
+            //all trips from a person
             List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(person.getSelectedPlan());
             for (TripStructureUtils.Trip drtTrip : trips) {
-                //判断主要交通工具 是不是drt
+                //determine if main traffic mode is DRT
                 if (mainModeIdentifier.identifyMainMode(drtTrip.getTripElements()).equals(TransportMode.drt)) {
-                    //若是，则把这段trip添加进drt的trip合集中
+                    //if yes, add this trip in the trip set
                     drtTripSet.add(drtTrip);
                 }
             }
