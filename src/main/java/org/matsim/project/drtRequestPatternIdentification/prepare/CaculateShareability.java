@@ -7,19 +7,14 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
-import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.router.TripStructureUtils;
-import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
-import org.matsim.core.router.speedy.SpeedyALTFactory;
-import org.matsim.core.router.util.LeastCostPathCalculator;
-import org.matsim.core.router.util.TravelDisutility;
-import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import java.util.List;
+import java.util.Map;
 
 public class CaculateShareability {
 
@@ -36,11 +31,6 @@ public class CaculateShareability {
         DrtConfigGroup drtConfigGroup = multiModeDrtConfig.getModalElements().iterator().next();
         Network network = scenario.getNetwork();
 
-        // Create router (based on free speed)
-        TravelTime travelTime = new QSimFreeSpeedTravelTime(1);
-        TravelDisutility travelDisutility = new OnlyTimeDependentTravelDisutility(travelTime);
-        LeastCostPathCalculator router = new SpeedyALTFactory().createPathCalculator(network, travelDisutility, travelTime);
-
         // Getting drt setups
         double alpha = drtConfigGroup.maxTravelTimeAlpha;
         double beta = drtConfigGroup.maxTravelTimeBeta;
@@ -53,6 +43,10 @@ public class CaculateShareability {
         List<TripStructureUtils.Trip> drtTripSet = DrtTripsSet.getDrtTripSet();
         //number of drt trips
         System.out.println(drtTripSet.size());
+
+        //get trip time map
+        Map<Link,Map<Link,Double>> tripTimeMap = TripTimeSet.getTripTimeSet();
+        System.out.println(tripTimeMap.size());
 
         //get drt trip set 1
         for (TripStructureUtils.Trip trip1 : drtTripSet) {
@@ -81,35 +75,35 @@ public class CaculateShareability {
                     continue;
                 }
                 //o1,o2,d1,d2
-                if (departureTime2 + maxWaitTime > departureTime1 + TripTimeSet.getTripTimeSet().get(fromLink1).get(fromLink2)) {
-                    if (departureTime1 + alpha * TripTimeSet.getTripTimeSet().get(fromLink1).get(fromLink2) + beta > departureTime1 + TripTimeSet.getTripTimeSet().get(fromLink1).get(fromLink2) + TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink1)) {
-                        if (departureTime2 + (alpha * TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink2)) + beta > departureTime1 + TripTimeSet.getTripTimeSet().get(fromLink1).get(fromLink2) + TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink1) + TripTimeSet.getTripTimeSet().get(toLink1).get(toLink2)) {
+                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2)) {
+                    if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(fromLink2) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink1)) {
+                        if (departureTime2 + (alpha * tripTimeMap.get(fromLink2).get(toLink2)) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink1) + tripTimeMap.get(toLink1).get(toLink2)) {
                             numberOfShare ++;
                             continue;
                         }
                     }
                 }
                 //o1,o2,d2,d1
-                if (departureTime2 + maxWaitTime > departureTime1 + TripTimeSet.getTripTimeSet().get(fromLink1).get(fromLink2)) {
-                    if (departureTime2 + alpha * TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink2) + beta > departureTime1 + TripTimeSet.getTripTimeSet().get(fromLink1).get(fromLink2) + TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink2)) {
-                        if (departureTime1 + alpha * TripTimeSet.getTripTimeSet().get(fromLink1).get(toLink1) + beta > departureTime1 + TripTimeSet.getTripTimeSet().get(fromLink1).get(fromLink2) + TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink2) + TripTimeSet.getTripTimeSet().get(toLink2).get(toLink1)) {
+                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2)) {
+                    if (departureTime2 + alpha * tripTimeMap.get(fromLink2).get(toLink2) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink2)) {
+                        if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(toLink1) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink2) + tripTimeMap.get(toLink2).get(toLink1)) {
                             numberOfShare ++;
                             continue;
                         }
                     }
                     //o2,o1,d1,d2
-                    if (departureTime1 + maxWaitTime > departureTime2 + TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink1)) {
-                        if (departureTime1 + alpha * TripTimeSet.getTripTimeSet().get(fromLink1).get(toLink1) + beta > departureTime2 + TripTimeSet.getTripTimeSet().get(fromLink2).get(fromLink1) + TripTimeSet.getTripTimeSet().get(fromLink1).get(toLink1)) {
-                            if (departureTime2 + alpha * TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink2) + beta > departureTime2 + TripTimeSet.getTripTimeSet().get(fromLink2).get(fromLink1) + TripTimeSet.getTripTimeSet().get(fromLink1).get(toLink1) + TripTimeSet.getTripTimeSet().get(toLink1).get(toLink2)) {
+                    if (departureTime1 + maxWaitTime > departureTime2 + tripTimeMap.get(fromLink2).get(toLink1)) {
+                        if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(toLink1) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink1)) {
+                            if (departureTime2 + alpha * tripTimeMap.get(fromLink2).get(toLink2) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink1) + tripTimeMap.get(toLink1).get(toLink2)) {
                                 numberOfShare ++;
                                 continue;
                             }
                         }
                     }
                     //o2,o1,d2,d1
-                    if (departureTime1 + maxWaitTime > departureTime2 + TripTimeSet.getTripTimeSet().get(fromLink2).get(fromLink1)) {
-                        if (departureTime2 + alpha * TripTimeSet.getTripTimeSet().get(fromLink2).get(toLink2) + beta > departureTime2 + TripTimeSet.getTripTimeSet().get(fromLink2).get(fromLink1) + TripTimeSet.getTripTimeSet().get(fromLink1).get(toLink2)) {
-                            if (departureTime1 + alpha * TripTimeSet.getTripTimeSet().get(fromLink1).get(toLink1) + beta > departureTime2 + TripTimeSet.getTripTimeSet().get(fromLink2).get(fromLink1) + TripTimeSet.getTripTimeSet().get(fromLink1).get(toLink2) + TripTimeSet.getTripTimeSet().get(toLink2).get(toLink1)) {
+                    if (departureTime1 + maxWaitTime > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1)) {
+                        if (departureTime2 + alpha * tripTimeMap.get(fromLink2).get(toLink2) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink2)) {
+                            if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(toLink1) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink2) + tripTimeMap.get(toLink2).get(toLink1)) {
                                 numberOfShare ++;
                             }
                         }
