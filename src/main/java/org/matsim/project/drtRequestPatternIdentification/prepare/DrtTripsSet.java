@@ -30,14 +30,14 @@ public class DrtTripsSet {
 
         MainModeIdentifier mainModeIdentifier = new DefaultAnalysisMainModeIdentifier();
 
-        //a trip set including all drt trips
+        // a trip set including all drt trips
         for(Person person : population.getPersons().values()) {
-            //all trips from a person
+            // all trips from a person
             List<TripStructureUtils.Trip> trips = TripStructureUtils.getTrips(person.getSelectedPlan());
             for (TripStructureUtils.Trip drtTrip : trips) {
-                //determine if main traffic mode is DRT
+                // Determine if main traffic mode is DRT
                 if (mainModeIdentifier.identifyMainMode(drtTrip.getTripElements()).equals(TransportMode.drt)) {
-                    //if yes, add this trip in the trip set
+                    // If yes, add this trip in the trip set
                     drtTripSet.add(drtTrip);
                 }
             }

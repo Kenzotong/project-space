@@ -40,17 +40,17 @@ public class CaculateShareability {
 
         int numberOfShare = 0;
 
+        // Get drt trip set
         List<TripStructureUtils.Trip> drtTripSet = DrtTripsSet.getDrtTripSet();
-        //number of drt trips
         System.out.println(drtTripSet.size());
 
-        //get trip time map
+        // Get trip time map
         Map<Link,Map<Link,Double>> tripTimeMap = TripTimeSet.getTripTimeSet();
         System.out.println(tripTimeMap.size());
 
-        //get drt trip set 1
+        // Get drt trip set 1
         for (TripStructureUtils.Trip trip1 : drtTripSet) {
-            //get drt trip set 2
+            // Get drt trip set 2
             for (TripStructureUtils.Trip trip2 : drtTripSet) {
 
                 double departureTime1 = trip1.getOriginActivity().getEndTime().orElseThrow(RuntimeException::new);
@@ -69,50 +69,62 @@ public class CaculateShareability {
                 Link fromLink2 = NetworkUtils.getNearestLink(network, trip2.getOriginActivity().getCoord());
                 Link toLink2 = NetworkUtils.getNearestLink(network, trip2.getDestinationActivity().getCoord());
 
-                //determine if it is shareable
-                //if trip 1 is the same as trip 2
+                // Trip time from a link to another link
+                double tripTimeO1ToO2 = tripTimeMap.get(fromLink1).get(fromLink2);
+                double tripTimeO2ToD1 = tripTimeMap.get(fromLink2).get(toLink1);
+                double tripTimeD1ToD2 = tripTimeMap.get(toLink1).get(toLink2);
+                double tripTimeO2ToD2 = tripTimeMap.get(fromLink2).get(toLink2);
+                double tripTimeD2ToD1 = tripTimeMap.get(toLink2).get(toLink1);
+                double tripTimeO2ToO1 = tripTimeMap.get(fromLink2).get(fromLink1);
+                double tripTimeO1ToD1 = tripTimeMap.get(fromLink1).get(toLink1);
+                double tripTimeO1ToD2 = tripTimeMap.get(fromLink1).get(toLink2);
+
+
+                // Determine if it is shareable
+                // If trip 1 is the same as trip 2
                 if (trip1 == trip2) {
                     continue;
                 }
-                //o1,o2,d1,d2
-                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2)) {
-                    if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(fromLink2) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink1)) {
-                        if (departureTime2 + (alpha * tripTimeMap.get(fromLink2).get(toLink2)) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink1) + tripTimeMap.get(toLink1).get(toLink2)) {
+
+                // o1,o2,d1,d2
+                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeO1ToO2) {
+                    if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD1) {
+                        if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD1 + tripTimeD1ToD2) {
                             numberOfShare ++;
                             continue;
                         }
                     }
                 }
-                //o1,o2,d2,d1
-                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2)) {
-                    if (departureTime2 + alpha * tripTimeMap.get(fromLink2).get(toLink2) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink2)) {
-                        if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(toLink1) + beta > departureTime1 + tripTimeMap.get(fromLink1).get(fromLink2) + tripTimeMap.get(fromLink2).get(toLink2) + tripTimeMap.get(toLink2).get(toLink1)) {
+                // o1,o2,d2,d1
+                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeO1ToO2) {
+                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD2) {
+                        if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime1 + tripTimeO1ToO2 + tripTimeO2ToD2 + tripTimeD2ToD1) {
+                            numberOfShare++;
+                            continue;
+                        }
+                    }
+                }
+                // o2,o1,d1,d2
+                if (departureTime1 + maxWaitTime > departureTime2 + tripTimeO2ToO1) {
+                    if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD1) {
+                        if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD1 + tripTimeD1ToD2) {
                             numberOfShare ++;
                             continue;
                         }
                     }
-                    //o2,o1,d1,d2
-                    if (departureTime1 + maxWaitTime > departureTime2 + tripTimeMap.get(fromLink2).get(toLink1)) {
-                        if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(toLink1) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink1)) {
-                            if (departureTime2 + alpha * tripTimeMap.get(fromLink2).get(toLink2) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink1) + tripTimeMap.get(toLink1).get(toLink2)) {
-                                numberOfShare ++;
-                                continue;
-                            }
-                        }
-                    }
-                    //o2,o1,d2,d1
-                    if (departureTime1 + maxWaitTime > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1)) {
-                        if (departureTime2 + alpha * tripTimeMap.get(fromLink2).get(toLink2) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink2)) {
-                            if (departureTime1 + alpha * tripTimeMap.get(fromLink1).get(toLink1) + beta > departureTime2 + tripTimeMap.get(fromLink2).get(fromLink1) + tripTimeMap.get(fromLink1).get(toLink2) + tripTimeMap.get(toLink2).get(toLink1)) {
-                                numberOfShare ++;
-                            }
+                }
+                // o2,o1,d2,d1
+                if (departureTime1 + maxWaitTime > departureTime2 + tripTimeO2ToO1) {
+                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD2) {
+                        if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD2 + tripTimeD2ToD1) {
+                            numberOfShare ++;
                         }
                     }
                 }
             }
         }
 
-        System.out.println("number of pairs is: " + numberOfShare);
+    System.out.println("number of pairs is: " + numberOfShare);
 
     }
 }
