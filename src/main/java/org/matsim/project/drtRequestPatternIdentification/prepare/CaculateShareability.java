@@ -172,7 +172,7 @@ public class CaculateShareability {
                 //O1的最晚出发时间要大于O2到O1的最晚到达时间
                 if (departureTime1 + maxWaitTime > departureTime2 + maxWaitTime + tripTimeO2ToO1) {
                     //D2的最晚到达时间要大于O1的最晚出发时间到D2的实际到达时间
-                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime2 + tripTimeO2ToO1 + tripTimeO1ToD2) {
+                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime1 + maxWaitTime + tripTimeO1ToD2) {
                         //D1的最晚到达时间要大于D2的最晚出发时间到D1的实际到达时间
                         if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + alpha * tripTimeO2ToD2 + beta + tripTimeD2ToD1) {
                             numberOfShare ++;
