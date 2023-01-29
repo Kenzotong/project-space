@@ -23,9 +23,13 @@ import org.matsim.core.scenario.ScenarioUtils;
 import java.util.*;
 
 public class TripTimeSet {
+    public static void main(String[] args){
+        System.out.println(getTripTimeSet().size());
+    }
+
     public static Map<Link, Map<Link, Double>> getTripTimeSet() {
         // Create scenario based on config file
-        String configPath = "D:/github/project-space/scenarios/vulkaneifel/config.xml";
+        String configPath = "D:\\Thesis\\mielec\\mielec-scenario\\mielec_drt_config.xml";
 
         Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
@@ -46,6 +50,16 @@ public class TripTimeSet {
 
         // Get drt trip set 1
         for (TripStructureUtils.Trip trip1 : drtTripSet) {
+
+            // get OD link
+            // When link id is written in the plan
+            Link fromLink1 = network.getLinks().get(trip1.getOriginActivity().getLinkId());
+            Link toLink1 = network.getLinks().get(trip1.getDestinationActivity().getLinkId());
+
+            // When link id is not provided (coordinate is provided instead)
+//            Link fromLink1 = NetworkUtils.getNearestLink(network, trip1.getOriginActivity().getCoord());
+//            Link toLink1 = NetworkUtils.getNearestLink(network, trip1.getDestinationActivity().getCoord());
+
             //Get drt trip set 2
             for (TripStructureUtils.Trip trip2 : drtTripSet) {
 
@@ -55,17 +69,12 @@ public class TripTimeSet {
 
                 // get OD link
                 // When link id is written in the plan
-//                Link fromLink1 = network.getLinks().get(trip1.getOriginActivity().getLinkId());
-//                Link toLink1 = network.getLinks().get(trip1.getDestinationActivity().getLinkId());
-//                Link fromLink2 = network.getLinks().get(trip2.getOriginActivity().getLinkId());
-//                Link toLink2 = network.getLinks().get(trip2.getDestinationActivity().getLinkId());
+                Link fromLink2 = network.getLinks().get(trip2.getOriginActivity().getLinkId());
+                Link toLink2 = network.getLinks().get(trip2.getDestinationActivity().getLinkId());
 
                 // When link id is not provided (coordinate is provided instead)
-                Link fromLink1 = NetworkUtils.getNearestLink(network, trip1.getOriginActivity().getCoord());
-                Link toLink1 = NetworkUtils.getNearestLink(network, trip1.getDestinationActivity().getCoord());
-                Link fromLink2 = NetworkUtils.getNearestLink(network, trip2.getOriginActivity().getCoord());
-                Link toLink2 = NetworkUtils.getNearestLink(network, trip2.getDestinationActivity().getCoord());
-
+//                Link fromLink2 = NetworkUtils.getNearestLink(network, trip2.getOriginActivity().getCoord());
+//                Link toLink2 = NetworkUtils.getNearestLink(network, trip2.getDestinationActivity().getCoord());
 
                 // Calculate travel time
                 // o1 to o2

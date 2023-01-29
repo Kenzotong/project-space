@@ -8,11 +8,11 @@
 			<!-- If true, the startLink is changed to last link in the current schedule, so the taxi starts the next day at the link where it stopped operating the day before. False by default. -->
 			<param name="changeStartLinkToLastLinkInSchedule" value="false"/>
 			<!-- Defines the slope of the maxTravelTime estimation function (optimisation constraint), i.e. maxTravelTimeAlpha * estimated_drt_travel_time + maxTravelTimeBeta. Alpha should not be smaller than 1. -->
-			<param name="maxTravelTimeAlpha" value="1.5"/>
+			<param name="maxTravelTimeAlpha" value="2"/>
 			<!-- Defines the shift of the maxTravelTime estimation function (optimisation constraint), i.e. maxTravelTimeAlpha * estimated_drt_travel_time + maxTravelTimeBeta. Beta should not be smaller than 0. -->
-			<param name="maxTravelTimeBeta" value="900"/>
+			<param name="maxTravelTimeBeta" value="600"/>
 			<!-- Max wait time for the bus to come (optimisation constraint). -->
-			<param name="maxWaitTime" value="900"/>
+			<param name="maxWaitTime" value="100"/>
 
 			<!-- Operational Scheme, either door2door or stopbased. door2door by default -->
 			<param name="operationalScheme" value="door2door"/>
@@ -21,12 +21,12 @@
 			<param name="stopDuration" value="60.0"/>
 
 			<!-- An XML file specifying the vehicle fleet. The file format according to dvrp_vehicles_v1.dtd -->
-			<param name="vehiclesFile" value="drt-vehicles/500-8-seater-drt-vehicles.xml"/>
+			<param name="vehiclesFile" value="drt-vehicles/100-8-seater-drt-vehicles.xml"/>
 
 			<!-- Writes out detailed DRT customer stats in each iteration. True by default. -->
 			<param name="writeDetailedCustomerStats" value="true"/>
 
-			<param name="rejectRequestIfMaxWaitOrTravelTimeViolated" value="true" />
+			<param name="rejectRequestIfMaxWaitOrTravelTimeViolated" value="false" />
 
 			<parameterset type="zonalSystem">
 				<param name="zonesGeneration" value="GridFromNetwork"/>
@@ -61,18 +61,18 @@
 		<!-- Used for estimation of travel times for VrpOptimizer by means of the exponential moving average. The weighting decrease, alpha, must be in (0,1]. We suggest small values of alpha, e.g. 0.05. The averaging starts from the initial travel time estimates. If not provided, the free-speed TTs is used as the initial estimates For more info see comments in: VrpTravelTimeEstimator, VrpTravelTimeModules, DvrpModule. -->
 		<param name="travelTimeEstimationAlpha" value="0.05" />
         <parameterset type="travelTimeMatrix">
-            <param name="cellSize" value="500"/>
+            <param name="cellSize" value="1000"/>
         </parameterset>
 	</module>
 
 	<module name="network">
-		<param name="inputNetworkFile" value="network.xml.gz" />
+		<param name="inputNetworkFile" value="vulkaneifel-v1.0-network.xml.gz" />
 		<!-- param name="timeVariantNetwork" value="false" / if timeVariantNetwork -->
 		<!-- param name="inputChangeEventsFile" value=""/ if timeVariantNetwork -->
 	</module>
 
 	<module name="plans">
-		<param name="inputPlansFile" value="drt-plans.xml.gz" />
+		<param name="inputPlansFile" value="vulkaneifel-1.0-25pct-drt-only-1.plans.xml.gz" />
 	</module>
 
 	<module name="qsim">
@@ -85,7 +85,7 @@
 	</module>
 
 	<module name="controler">
-		<param name="outputDirectory" value="./output/test" />
+		<param name="outputDirectory" value="./output/test(100)/2-600-100" />
 		<param name="overwriteFiles" value="deleteDirectoryIfExists" />
 		<param name="firstIteration" value="0" />
 		<param name="lastIteration" value="1" />
