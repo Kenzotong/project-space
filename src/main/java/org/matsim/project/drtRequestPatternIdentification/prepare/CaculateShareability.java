@@ -12,7 +12,6 @@ import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.speedy.SpeedyALTFactory;
@@ -21,9 +20,8 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
 
 public class CaculateShareability {
 
@@ -133,48 +131,57 @@ public class CaculateShareability {
                 }
 
                 // o1,o2,d1,d2
-                //O2的最晚出发时间要大于O1到O2的最晚到达时间
-                if (departureTime2 + maxWaitTime > departureTime1 + maxWaitTime + tripTimeO1ToO2) {
-                    //D1的最晚到达时间要大于O2的最晚出发时间到D1的实际到达时间
-                    if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + maxWaitTime + tripTimeO2ToD1) {
-                        //D2的最晚到达时间要大于D1的最晚到达时间到D2的实际到达时间
-                        if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime1 + alpha * tripTimeO1ToD1 + beta + tripTimeD1ToD2) {
-                            numberOfShare ++;
+                //O2的最晚出发时间 > O1到O2的到达时间（理想情况）
+                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeO1ToO2) {
+                    //O2的实际出发时间（在trip2提交request的时间和trip2的最晚出发时间之间）
+                    double departureTimeO2 = Math.max(departureTime1 + tripTimeO1ToO2, departureTime2);
+                    //D1的最晚到达时间 > O2出发到D1的实际到达时间
+                    if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTimeO2 + tripTimeO2ToD1) {
+                        //D2的最晚到达时间 > 从O2出发经过D1再到D2的实际到达时间
+                        if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTimeO2 + tripTimeO2ToD1 + tripTimeD1ToD2) {
+                            numberOfShare++;
                             continue;
                         }
                     }
                 }
+
                 // o1,o2,d2,d1
-                //O2的最晚出发时间要大于O1到O2的最晚到达时间
-                if (departureTime2 + maxWaitTime > departureTime1 + maxWaitTime + tripTimeO1ToO2) {
-                    //D2的最晚到达时间要大于O2的最晚出发时间到D2的实际到达时间
-                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime2 + maxWaitTime + tripTimeO2ToD2) {
-                        //D1的最晚到达时间要大于D2的最晚到达时间到D1的实际到达时间
-                        if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + alpha * tripTimeO2ToD2 + beta + tripTimeD2ToD1) {
+                //O2的最晚出发时间 > O1到O2的到达时间（理想情况）
+                if (departureTime2 + maxWaitTime > departureTime1 + tripTimeO1ToO2) {
+                    //O2的实际出发时间
+                    double departureTimeO2 = Math.max(departureTime1 + tripTimeO1ToO2, departureTime2);
+                    //D2的最晚到达时间 > O2出发到D2的实际到达时间
+                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTimeO2 + tripTimeO2ToD2) {
+                        //D1的最晚到达时间 > 从O2出发经过D2再到D1的实际到达时间
+                        if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTimeO2 + tripTimeO2ToD2 + tripTimeD2ToD1) {
                             numberOfShare++;
                             continue;
                         }
                     }
                 }
                 // o2,o1,d1,d2
-                //O1的最晚出发时间要大于O2到O1的最晚到达时间
-                if (departureTime1 + maxWaitTime > departureTime2 + maxWaitTime + tripTimeO2ToO1) {
-                    //D1的最晚到达时间要大于O1的最晚出发时间到D1的实际到达时间
-                    if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime1 + maxWaitTime + tripTimeO1ToD1) {
-                        //D2的最晚到达时间要大于D1的最晚出发时间到D2的实际到达时间
-                        if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime1 + alpha * tripTimeO1ToD1 + beta + tripTimeD1ToD2) {
+                //O1的最晚出发时间 > O2到O1的到达时间（理想情况）
+                if (departureTime1 + maxWaitTime > departureTime2 + tripTimeO2ToO1) {
+                    //O1的实际出发时间
+                    double departureTimeO1 = Math.max(departureTime2 + tripTimeO2ToO1, departureTime1);
+                    //D1的最晚到达时间 > O1出发到D1的实际到达时间
+                    if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTimeO1 + tripTimeO1ToD1) {
+                        //D2的最晚到达时间 > 从O1出发经过D1再到D2的实际到达时间
+                        if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTimeO1 + tripTimeO1ToD1 + tripTimeD1ToD2) {
                             numberOfShare ++;
                             continue;
                         }
                     }
                 }
                 // o2,o1,d2,d1
-                //O1的最晚出发时间要大于O2到O1的最晚到达时间
-                if (departureTime1 + maxWaitTime > departureTime2 + maxWaitTime + tripTimeO2ToO1) {
-                    //D2的最晚到达时间要大于O1的最晚出发时间到D2的实际到达时间
-                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTime1 + maxWaitTime + tripTimeO1ToD2) {
-                        //D1的最晚到达时间要大于D2的最晚出发时间到D1的实际到达时间
-                        if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTime2 + alpha * tripTimeO2ToD2 + beta + tripTimeD2ToD1) {
+                //O1的最晚出发时间 > O2到O1的到达时间（理想情况）
+                if (departureTime1 + maxWaitTime > departureTime2 + tripTimeO2ToO1) {
+                    //O1的实际出发时间
+                    double departureTimeO1 = Math.max(departureTime2 + tripTimeO2ToO1, departureTime1);
+                    //D2的最晚到达时间 > O1出发到D2的实际到达时间
+                    if (departureTime2 + alpha * tripTimeO2ToD2 + beta > departureTimeO1 + tripTimeO1ToD2) {
+                        //D1的最晚到达时间 > 从O1出发经过D2再到D1的实际到达时间
+                        if (departureTime1 + alpha * tripTimeO1ToD1 + beta > departureTimeO1 + tripTimeO1ToD2 + tripTimeD2ToD1) {
                             numberOfShare ++;
                         }
                     }
@@ -183,7 +190,12 @@ public class CaculateShareability {
         }
 
         System.out.println("number of share pairs is: " + numberOfShare);
-        System.out.println("total number of pairs is: " + (drtTripSet.size() * drtTripSet.size()- drtTripSet.size()) / 2);
+
+        int numberOfTotalPairs = (drtTripSet.size() * drtTripSet.size()- drtTripSet.size()) / 2;
+        System.out.println("total number of pairs is: " + numberOfTotalPairs);
+
+        double shareability = (double)numberOfShare / numberOfTotalPairs;
+        System.out.println("shareablity of this scenario is: " + shareability * 100 + "%");
 
     }
 }
