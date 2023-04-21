@@ -12,6 +12,7 @@ import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.speedy.SpeedyALTFactory;
@@ -27,7 +28,7 @@ public class CaculateShareability {
 
     public static void main(String[] args) {
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\mielec\\mielec-scenario\\mielec_drt_config.xml";
+        String configPath = "D:\\Thesis\\oranienburg\\oranienburg\\oranienburg_drt_config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -53,7 +54,7 @@ public class CaculateShareability {
         int numberOfShare = 0;
 
         // Get drt trip set
-        List<TripStructureUtils.Trip> drtTripSet = DrtTripsSet.getDrtTripSet();
+        List<TripStructureUtils.Trip> drtTripSet = DrtTripsSet.getDrtTripSet(config);
         System.out.println("number of trips is: " + drtTripSet.size());
 
         // Get trip time map

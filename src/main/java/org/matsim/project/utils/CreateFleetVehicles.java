@@ -66,7 +66,7 @@ public class CreateFleetVehicles implements MATSimAppCommand {
     @CommandLine.Option(names = "--fleet-size-to", description = "number of vehicles to generate", required = true)
     private int fleetSizeTo;
 
-    @CommandLine.Option(names = "--fleet-size-interval", description = "number of vehicles to generate", defaultValue = "10")
+    @CommandLine.Option(names = "--fleet-size-interval", description = "number of vehicles to generate", defaultValue = "100")
     private int fleetSizeInterval;
 
     @CommandLine.Option(names = "--capacity", description = "capacity of the vehicle", required = true)

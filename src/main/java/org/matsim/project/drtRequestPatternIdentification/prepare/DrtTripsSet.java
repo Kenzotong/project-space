@@ -21,11 +21,11 @@ public class DrtTripsSet {
 //        System.out.println(getDrtTripSet().size());
 //    }
 
-    public static List<TripStructureUtils.Trip> getDrtTripSet(){
+    public static List<TripStructureUtils.Trip> getDrtTripSet(Config config){
         List<TripStructureUtils.Trip> drtTripSet = new ArrayList<>();
 
-        String configPath = "D:\\Thesis\\mielec\\mielec-scenario\\mielec_drt_config.xml";
-        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
+//        String configPath = "D:\\Thesis\\Vulkaneifel\\config.xml";
+//        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
         Population population = scenario.getPopulation();
 

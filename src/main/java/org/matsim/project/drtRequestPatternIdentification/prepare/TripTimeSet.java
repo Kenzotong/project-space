@@ -23,15 +23,15 @@ import org.matsim.core.scenario.ScenarioUtils;
 import java.util.*;
 
 public class TripTimeSet {
-    public static void main(String[] args){
-        System.out.println(getTripTimeSet().size());
-    }
+//    public static void main(String[] args){
+//        System.out.println(getTripTimeSet(config).size());
+//    }
 
-    public static Map<Link, Map<Link, Double>> getTripTimeSet() {
+    public static Map<Link, Map<Link, Double>> getTripTimeSet(Config config) {
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\mielec\\mielec-scenario\\mielec_drt_config.xml";
+//        String configPath = "D:\\Thesis\\mielec\\mielec-scenario\\mielec_drt_config.xml";
 
-        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
+//        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
         Network network = scenario.getNetwork();
 
@@ -41,7 +41,7 @@ public class TripTimeSet {
         LeastCostPathCalculator router = new SpeedyALTFactory().createPathCalculator(network, travelDisutility, travelTime);
 
         // Get drt trip set
-        List<TripStructureUtils.Trip> drtTripSet = DrtTripsSet.getDrtTripSet();
+        List<TripStructureUtils.Trip> drtTripSet = DrtTripsSet.getDrtTripSet(config);
         System.out.println(drtTripSet.size());
 
         // Create maps to store travel time
