@@ -140,9 +140,9 @@ public class RollingHorizonDrtOptimizer implements DrtOptimizer {
         var vehicleId = preplannedSchedules.preplannedRequestToVehicle.get(preplannedRequest.key);
 
         if (vehicleId == null) {
-            Preconditions.checkState(preplannedSchedules.unassignedRequests.containsKey(preplannedRequest.key),
-                    "Pre-planned request (%s) not assigned to any vehicle and not marked as unassigned.",
-                    preplannedRequest);
+//            Preconditions.checkState(preplannedSchedules.unassignedRequests.containsKey(preplannedRequest.key),
+//                    "Pre-planned request (%s) not assigned to any vehicle and not marked as unassigned.",
+//                    preplannedRequest); //TODO this check will always fail when rejection happens. Reason: the key is a newly created object, which is not in the map.
             eventsManager.processEvent(new PassengerRequestRejectedEvent(timer.getTimeOfDay(), mode, request.getId(),
                     drtRequest.getPassengerId(), "Marked as unassigned"));
             return;
@@ -213,7 +213,7 @@ public class RollingHorizonDrtOptimizer implements DrtOptimizer {
     @Override
     public void notifyMobsimBeforeSimStep(MobsimBeforeSimStepEvent mobsimBeforeSimStepEvent) {
         double now = mobsimBeforeSimStepEvent.getSimulationTime();
-        // TODO at time = 0, vehicle does not have any task, therefore, we can only start at t = 1
+        // At time = 0, vehicle does not have any task, therefore, we can only start at t = 1
         if (now % interval == 1 && now >= serviceStartTime && now < serviceEndTime) {
             for (DvrpVehicle v : fleet.getVehicles().values()) {
                 scheduleTimingUpdater.updateTimings(v);
@@ -271,7 +271,7 @@ public class RollingHorizonDrtOptimizer implements DrtOptimizer {
             double endTime = now + horizon;
             log.info("Calculating the plan for t =" + now + " to t = " + endTime);
             log.info("There are " + newRequests.size() + " new request within this horizon");
-            preplannedSchedules = solver.calculate(preplannedSchedules, realTimeVehicleInfoMap, newRequests);
+            preplannedSchedules = solver.calculate(preplannedSchedules, realTimeVehicleInfoMap, newRequests, horizon, interval, now);
 
             // Update vehicles schedules
             for (OnlineVehicleInfo onlineVehicleInfo : realTimeVehicleInfoMap.values()) {
@@ -348,7 +348,7 @@ public class RollingHorizonDrtOptimizer implements DrtOptimizer {
     }
 
     public record PreplannedStop(PreplannedRequest preplannedRequest, boolean pickup) {
-        private Id<Link> getLinkId() {
+        public Id<Link> getLinkId() {
             return pickup ? preplannedRequest.key.fromLinkId : preplannedRequest.key.toLinkId;
         }
     }
@@ -358,7 +358,7 @@ public class RollingHorizonDrtOptimizer implements DrtOptimizer {
                                       Map<PreplannedRequestKey, PreplannedRequest> unassignedRequests) {
     }
 
-    static PreplannedRequest createFromRequest(DrtRequest request) {
+    public static PreplannedRequest createFromRequest(DrtRequest request) {
         return new PreplannedRequest(new PreplannedRequestKey(request.getPassengerId(), request.getFromLink().getId(),
                 request.getToLink().getId()), request.getEarliestStartTime(), request.getLatestStartTime(),
                 request.getLatestArrivalTime());

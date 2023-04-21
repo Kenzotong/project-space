@@ -8,8 +8,10 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.NetworkWriter;
+import org.matsim.api.core.v01.network.Node;
 import org.matsim.application.MATSimAppCommand;
 import org.matsim.application.options.CrsOptions;
+import org.matsim.application.options.ShpOptions;
 import org.matsim.contrib.osm.networkReader.LinkProperties;
 import org.matsim.contrib.osm.networkReader.OsmTags;
 import org.matsim.contrib.osm.networkReader.SupersonicOsmNetworkReader;
@@ -37,6 +39,10 @@ public class CreateNetworkFromOsmData implements MATSimAppCommand {
 
     @CommandLine.Option(names = "--output", description = "output network file", required = true)
     private Path output;
+
+    @CommandLine.Mixin
+    private ShpOptions shp = new ShpOptions();
+    // To only keep the links within certain area, specify the shapefile
 
     @CommandLine.Mixin
     private CrsOptions crs = new CrsOptions();
@@ -67,8 +73,26 @@ public class CreateNetworkFromOsmData implements MATSimAppCommand {
                 .build()
                 .read(input.toString());
 
+        if (shp.isDefined()) {
+            Set<Link> linkToRemove = new HashSet<>();
+            for (Link link : network.getLinks().values()) {
+                if (!MGC.coord2Point(link.getToNode().getCoord()).within(shp.getGeometry())) {
+                    linkToRemove.add(link);
+                }
+            }
+            linkToRemove.forEach(l -> network.removeLink(l.getId()));
+        }
+
         var cleaner = new MultimodalNetworkCleaner(network);
         cleaner.run(Set.of(TransportMode.car));
+
+        Set<Node> nodesToRemove = new HashSet<>();
+        for (Node node : network.getNodes().values()) {
+            if (node.getInLinks().size() == 0 && node.getOutLinks().size() == 0) {
+                nodesToRemove.add(node);
+            }
+        }
+        nodesToRemove.forEach(n -> network.removeNode(n.getId()));
 
         log.info("Modifying network speed for urban area...");
         log.info("Loading urban area geometry file");
