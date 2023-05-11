@@ -12,7 +12,6 @@ import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.speedy.SpeedyALTFactory;
@@ -24,7 +23,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 import java.util.List;
 
 
-public class CaculateShareability {
+public class CalculateShareability {
 
     public static void main(String[] args) {
         // Create scenario based on config file
