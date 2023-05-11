@@ -28,7 +28,7 @@ public class CaculateShareability {
 
     public static void main(String[] args) {
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\oranienburg\\oranienburg\\oranienburg_drt_config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }

@@ -74,8 +74,8 @@ public class ScoringBasedOnShareability {
 
         LinkToLinkTravelTimeMatrix travelTimeMatrix = new LinkToLinkTravelTimeMatrix(network, travelTime, relevantLinks, 0);
 
-        int counter = 0;
-        double shareablePairs = 0;
+        long counter = 0;
+        long shareablePairs = 0;
         double savingsScore = 0;
 
         for (int i = 0; i < drtTrips.size(); i++) {

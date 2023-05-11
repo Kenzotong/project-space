@@ -66,7 +66,7 @@ public class CreateFleetVehicles implements MATSimAppCommand {
     @CommandLine.Option(names = "--fleet-size-to", description = "number of vehicles to generate", required = true)
     private int fleetSizeTo;
 
-    @CommandLine.Option(names = "--fleet-size-interval", description = "number of vehicles to generate", defaultValue = "100")
+    @CommandLine.Option(names = "--fleet-size-interval", description = "number of vehicles to generate", defaultValue = "1")
     private int fleetSizeInterval;
 
     @CommandLine.Option(names = "--capacity", description = "capacity of the vehicle", required = true)
@@ -81,7 +81,7 @@ public class CreateFleetVehicles implements MATSimAppCommand {
     @CommandLine.Option(names = "--start-time", description = "service starting time", defaultValue = "0")
     private double startTime;
 
-    @CommandLine.Option(names = "--end-time", description = "service ending time", defaultValue = "86400")
+    @CommandLine.Option(names = "--end-time", description = "service ending time", defaultValue = "97200")
     private double endTime;
 
     @CommandLine.Option(names = "--depots", description = "Path to the depots location file", defaultValue = "")
