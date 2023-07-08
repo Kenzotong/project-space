@@ -5,6 +5,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
@@ -31,10 +32,10 @@ public class DRTPathZoneSequence {
         }
         Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
 
-        DRTPathLinkMap(config);
+        DRTPathZoneMap(config);
     }
 
-    public static void DRTPathLinkMap(Config config){
+    public static Map<String, Object> DRTPathZoneMap(Config config){
 
         Scenario scenario = ScenarioUtils.loadScenario(config);
         Network network = scenario.getNetwork();
@@ -49,12 +50,16 @@ public class DRTPathZoneSequence {
         System.out.println("number of trips is: " + drtTripSet.size());
 
         Map<Integer, List<Integer>> tripPathZoneMap = new HashMap<>();
+        Map<Integer, TripStructureUtils.Trip> tripNumberMap = new HashMap<>();
         Map<Id<Link>,Integer> linkZoneMap = LinkZoneMap.linkZoneMap(config);//获取link对应的zone的map
+        Map<String, Object> tripInfoMap = new HashMap<>();
 
         int tripNumber = 1;
 
         //遍历trip，创建path zone map
         for (TripStructureUtils.Trip trip : drtTripSet) {
+
+            tripNumberMap.put(tripNumber, trip);//以便用trip number查找对应的trip
 
             List<Integer> pathZoneList = new ArrayList<>();//每个trip有单独的zone list(zone有重复）
             List<Integer> uniquePathZoneList = new ArrayList<>();//无重复的zone list
@@ -62,10 +67,10 @@ public class DRTPathZoneSequence {
             Link fromLink = network.getLinks().get(trip.getOriginActivity().getLinkId());
             Link toLink = network.getLinks().get(trip.getDestinationActivity().getLinkId());
 
-            // Get path link list from each trip
+            // 计算当前trip的路径，并收集路径经过的link
             LeastCostPathCalculator.Path path = router.calcLeastCostPath(fromLink.getToNode(), toLink.getFromNode(),
                     0, null, null);
-            List<Link> pathLinkList = path.links;//当前trip行驶路径经过的所有link
+            List<Link> pathLinkList = path.links;
 
             //遍历这个当前link list，为每一个link找到对应的zone，并创建该路径经过的zone的list
             for(Link link : pathLinkList){
@@ -84,7 +89,9 @@ public class DRTPathZoneSequence {
             tripNumber++;
         }
 
-        System.out.println(tripPathZoneMap);
+        tripInfoMap.put("tripPathZoneMap", tripPathZoneMap);
+        tripInfoMap.put("tripNumberMap", tripNumberMap);
+        return tripInfoMap;
     }
 }
 
