@@ -18,22 +18,25 @@ import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 
 import java.util.*;
 
 public class DRTPathZoneSequence {
 
-    public static void main(String[] args) {
-
-        // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
-        if (args.length != 0) {
-            configPath = args[0];
-        }
-        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
-
-        DRTPathZoneMap(config);
-    }
+//    public static void main(String[] args) {
+//
+//        // Create scenario based on config file
+//        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
+//        if (args.length != 0) {
+//            configPath = args[0];
+//        }
+//        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
+//
+//        Map<Integer, List<Integer>> tripPathZoneMap = (Map<Integer, List<Integer>>) DRTPathZoneMap(config).get("tripPathZoneMap");
+//        Map<Integer, DrtDemand> tripNumberMap = (Map<Integer, DrtDemand>) DRTPathZoneMap(config).get("tripNumberMap");
+//        System.out.println(tripNumberMap);
+//    }
 
     public static Map<String, Object> DRTPathZoneMap(Config config){
 
@@ -46,26 +49,26 @@ public class DRTPathZoneSequence {
         LeastCostPathCalculator router = new SpeedyALTFactory().createPathCalculator(network, travelDisutility, travelTime);
 
         // Get drt trip set
-        List<TripStructureUtils.Trip> drtTripSet = DrtTripsSet.getDrtTripSet(config);
-        System.out.println("number of trips is: " + drtTripSet.size());
+        List<DrtDemand> drtDemandsSet = DrtTripsSet.getDrtDemandsSet(config);
+        System.out.println("number of trips is: " + drtDemandsSet.size());
 
         Map<Integer, List<Integer>> tripPathZoneMap = new HashMap<>();
-        Map<Integer, TripStructureUtils.Trip> tripNumberMap = new HashMap<>();
+        Map<Integer, DrtDemand> tripNumberMap = new HashMap<>();
         Map<Id<Link>,Integer> linkZoneMap = LinkZoneMap.linkZoneMap(config);//获取link对应的zone的map
         Map<String, Object> tripInfoMap = new HashMap<>();
 
         int tripNumber = 1;
 
         //遍历trip，创建path zone map
-        for (TripStructureUtils.Trip trip : drtTripSet) {
+        for (DrtDemand demand: drtDemandsSet) {
 
-            tripNumberMap.put(tripNumber, trip);//以便用trip number查找对应的trip
+            tripNumberMap.put(tripNumber, demand);//以便用trip number查找对应的trip
 
             List<Integer> pathZoneList = new ArrayList<>();//每个trip有单独的zone list(zone有重复）
             List<Integer> uniquePathZoneList = new ArrayList<>();//无重复的zone list
 
-            Link fromLink = network.getLinks().get(trip.getOriginActivity().getLinkId());
-            Link toLink = network.getLinks().get(trip.getDestinationActivity().getLinkId());
+            Link fromLink = demand.fromLink();
+            Link toLink = demand.toLink();
 
             // 计算当前trip的路径，并收集路径经过的link
             LeastCostPathCalculator.Path path = router.calcLeastCostPath(fromLink.getToNode(), toLink.getFromNode(),
