@@ -1,21 +1,13 @@
 package org.matsim.project.drtRequestPatternIdentification.prepare;
 
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Population;
-import org.matsim.application.analysis.DefaultAnalysisMainModeIdentifier;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
-import org.matsim.contrib.dvrp.path.VrpPathWithTravelData;
-import org.matsim.contrib.dvrp.path.VrpPaths;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.speedy.SpeedyALTFactory;
 import org.matsim.core.router.util.LeastCostPathCalculator;
@@ -23,6 +15,7 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
+
 import java.util.*;
 
 public class RunMatchDemand {
@@ -43,7 +36,6 @@ public class RunMatchDemand {
         Scenario scenario = ScenarioUtils.loadScenario(config);
         MultiModeDrtConfigGroup multiModeDrtConfig = MultiModeDrtConfigGroup.get(config);
         DrtConfigGroup drtConfigGroup = multiModeDrtConfig.getModalElements().iterator().next();
-        Population population = scenario.getPopulation();
         Network network = scenario.getNetwork();
 
         Map<String, Object> tripInfoMap = DRTPathZoneSequence.drtPathZoneMap(config);//得到trip的两个map
@@ -87,25 +79,33 @@ public class RunMatchDemand {
 //        System.out.println(a);
 
         int numOfMatch = 0;
+        double totalTravelTime = 0;
+        double pooledTravelTime = 0;
         System.out.println(tripPathZoneMap.size());
+
+        HashSet<Integer> pooledDemand = new HashSet<>();
 
         //空间上和时间上判断两个行程是否match
         for (int i = 1; i <= tripPathZoneMap.size(); i++){
-            List<Integer> demand1PathZoneList = tripPathZoneMap.get(i);
-            DrtDemand demand1 = tripNumberMap.get(i);//get demand 1
+            List<Integer> supplierPathZoneList = tripPathZoneMap.get(i);
+            DrtDemand supplier = tripNumberMap.get(i);//get demand 1 （supplier）
+            LeastCostPathCalculator.Path pathO1D1 = router.calcLeastCostPath(supplier.fromLink().getToNode(), supplier.toLink().getFromNode(),supplier.departureTime(), null, null);
+            double directTravelTime1 = pathO1D1.travelTime;
+            totalTravelTime += directTravelTime1;
             for (int j = 1; j <= tripPathZoneMap.size(); j++){
                 List<Integer> demand2PathZoneList = tripPathZoneMap.get(j);
-                DrtDemand demand2 = tripNumberMap.get(j);//get demand2
-                if(demand1 == demand2){
+                DrtDemand demander = tripNumberMap.get(j);//get demand2 （demander）
+                if(supplier == demander){
+                    continue;
+                }
+                //检查demander(短)是否作为demander之前已经被pick up了
+                if(pooledDemand.contains(j)){
                     continue;
                 }
 
-                if(Collections.indexOfSubList(demand1PathZoneList, demand2PathZoneList) != -1){//判断trip1的行程是否包含trip2的行程 -> 空间上两个trip可以match -> 进而再从时间上判断
+                if(Collections.indexOfSubList(supplierPathZoneList, demand2PathZoneList) != -1){//判断supplier的行程是否包含demander的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
 
-                    LeastCostPathCalculator.Path pathO1D1 = router.calcLeastCostPath(demand1.fromLink().getToNode(), demand1.toLink().getFromNode(),demand1.departureTime(), null, null);
-                    double directTravelTime1 = pathO1D1.travelTime;
-
-                    LeastCostPathCalculator.Path pathO2D2 = router.calcLeastCostPath(demand2.fromLink().getToNode(), demand2.toLink().getFromNode(),demand2.departureTime(), null, null);
+                    LeastCostPathCalculator.Path pathO2D2 = router.calcLeastCostPath(demander.fromLink().getToNode(), demander.toLink().getFromNode(),demander.departureTime(), null, null);
                     double directTravelTime2 = pathO2D2.travelTime;
 
 //                    VrpPathWithTravelData pathO1D1 = VrpPaths.calcAndCreatePath(demand1.fromLink(), demand1.toLink(), demand1.departureTime(), router, travelTime);
@@ -114,11 +114,11 @@ public class RunMatchDemand {
 //                    VrpPathWithTravelData pathO2D2 = VrpPaths.calcAndCreatePath(demand2.fromLink(), demand2.toLink(), demand2.departureTime(), router, travelTime);
 //                    double directTravelTime2 = pathO2D2.getTravelTime();
 
-                    double latestDepartureTime1 = demand1.departureTime() + maxWaitTime;
-                    double latestDepartureTime2 = demand2.departureTime() + maxWaitTime;
+                    double supplierLatestDepartureTime = supplier.departureTime() + maxWaitTime;
+                    double demanderLatestDepartureTime = demander.departureTime() + maxWaitTime;
 
-                    double latestArrivalTime1 = demand1.departureTime() + alpha * directTravelTime1 + beta;
-                    double latestArrivalTime2 = demand2.departureTime() + alpha * directTravelTime2 + beta;
+                    double supplierLatestArrivalTime = supplier.departureTime() + alpha * directTravelTime1 + beta;
+                    double demanderLatestArrivalTime = demander.departureTime() + alpha * directTravelTime2 + beta;
 
 //                    double a = demand1.departureTime();
 //                    //demand 中的link
@@ -149,22 +149,25 @@ public class RunMatchDemand {
 
                     //判断这两个trip在时间上是否match （o1,o2,d2,d1）
                     //O2的最晚出发时间 > O1出发从O1到O2的到达时间（理想情况）
-                    double now = demand1.departureTime() + stopDuration;
-                    LeastCostPathCalculator.Path pathO1O2 = router.calcLeastCostPath(demand1.fromLink().getToNode(), demand2.fromLink().getFromNode(),now, null, null);
+                    double now = supplier.departureTime() + stopDuration;//supplier是o1和d1，demander是o2和d2
+                    LeastCostPathCalculator.Path pathO1O2 = router.calcLeastCostPath(supplier.fromLink().getToNode(), demander.fromLink().getFromNode(),now, null, null);
                     double o1o2 = pathO1O2.travelTime;
                     double arrivalTimeO2 = now + o1o2; //o2 实际到达时间
-                    if (arrivalTimeO2 <= latestDepartureTime2) {
+                    if (arrivalTimeO2 <= demanderLatestDepartureTime) {
                         now = arrivalTimeO2 + stopDuration;
                         double arrivalTimeD2 = now + directTravelTime2;
-                        //o2到d2的时间 <= d2的最晚到达
-                        if (arrivalTimeD2 <= latestArrivalTime2) {
+                        //o2到d2的时间 <= demander的最晚到达
+                        if (arrivalTimeD2 <= demanderLatestArrivalTime) {
                             now = arrivalTimeD2 + stopDuration;
-                            LeastCostPathCalculator.Path pathD2D1 = router.calcLeastCostPath(demand2.toLink().getToNode(), demand1.toLink().getFromNode(),now, null, null);
+                            LeastCostPathCalculator.Path pathD2D1 = router.calcLeastCostPath(demander.toLink().getToNode(), supplier.toLink().getFromNode(),now, null, null);
                             double d2d1 = pathD2D1.travelTime;
                             double arrivalTimeD1 = now + d2d1;
                             //d2到d1的时间 <= d1的最晚到达
-                            if (arrivalTimeD1 <= latestArrivalTime1){
+                            if (arrivalTimeD1 <= supplierLatestArrivalTime){
                                 numOfMatch++;
+                                pooledDemand.add(j);//demand j作为demander 2已经被picked up，加入该列表，之后跳过
+                                pooledTravelTime += directTravelTime2;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中
+                                break;
                             }
                         }
                     }
@@ -172,11 +175,22 @@ public class RunMatchDemand {
             }
         }
 
-        int numOfTotalPairs = (drtDemands.size() * drtDemands.size() - 1)/2;
-        double shareRate = (double) numOfMatch / numOfTotalPairs * 100;
-        System.out.println("number of total pairs is: " + numOfTotalPairs);
+//        int numOfTotalPairs = (drtDemands.size() * drtDemands.size() - 1)/2;
+        int numOfTotalDemands = drtDemands.size();
+//        double shareRate = (double) numOfMatch / numOfTotalPairs * 100;
+        double rateOfSavingCar = (double) numOfMatch / numOfTotalDemands * 100;
+        double rateOfSavingTime = pooledTravelTime / totalTravelTime * 100;
+
+//        System.out.println("number of total pairs is: " + numOfTotalPairs);
+        System.out.println("number of total demands is: " + numOfTotalDemands);
         System.out.println("number of match is: " + numOfMatch);
-        System.out.println("share rate is: " + shareRate + "%");
+        System.out.println("---------------------------------------");
+        System.out.println("total travel time is: " + totalTravelTime);
+        System.out.println("saving travel time is: " + pooledTravelTime);
+//        System.out.println("trip share rate is: " + shareRate + "%");
+        System.out.println("---------------------------------------");
+        System.out.println("rate of saving car is: " + rateOfSavingCar + "%");
+        System.out.println("rate of saving travel time is:" + rateOfSavingTime + "%");
 
 
     }
