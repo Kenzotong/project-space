@@ -38,7 +38,7 @@ public class DRTPathZoneSequence {
 //        System.out.println(tripNumberMap);
 //    }
 
-    public static Map<String, Object> DRTPathZoneMap(Config config){
+    public static Map<String, Object> drtPathZoneMap(Config config){
 
         Scenario scenario = ScenarioUtils.loadScenario(config);
         Network network = scenario.getNetwork();
@@ -49,7 +49,7 @@ public class DRTPathZoneSequence {
         LeastCostPathCalculator router = new SpeedyALTFactory().createPathCalculator(network, travelDisutility, travelTime);
 
         // Get drt trip set
-        List<DrtDemand> drtDemandsSet = DrtTripsSet.getDrtDemandsSet(config);
+        List<DrtDemand> drtDemandsSet = DrtDemandsSet.getDrtDemandsSet(config);
         System.out.println("number of trips is: " + drtDemandsSet.size());
 
         Map<Integer, List<Integer>> tripPathZoneMap = new HashMap<>();
@@ -78,7 +78,7 @@ public class DRTPathZoneSequence {
             //遍历这个当前link list，为每一个link找到对应的zone，并创建该路径经过的zone的list
             for(Link link : pathLinkList){
                 Id<Link> linkId = link.getId();
-                int zoneId = linkZoneMap.get(linkId);
+                int zoneId = linkZoneMap.get(linkId);//得到zone id
                 pathZoneList.add(zoneId);//将经过的zone按顺序添加进zoneList
 
                 //创建一个无重复项的zone list（将上面得到的list进行去重）
