@@ -15,7 +15,7 @@ import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDem
 
 import java.util.ArrayList;
 import java.util.List;
-
+@Deprecated
 public class DrtTripsSet {
     //    public static void main(String[] args){
 //        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";

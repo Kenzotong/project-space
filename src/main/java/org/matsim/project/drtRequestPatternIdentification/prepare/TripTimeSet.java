@@ -1,4 +1,4 @@
-//package org.matsim.project.drtRequestPatternIdentification.prepare;
+package org.matsim.project.drtRequestPatternIdentification.prepare;
 //
 //import org.matsim.api.core.v01.Scenario;
 //import org.matsim.api.core.v01.network.Link;
@@ -22,8 +22,8 @@
 //
 //import java.util.*;
 //
-//@Deprecated
-//public class TripTimeSet {
+@Deprecated
+public class TripTimeSet {
 ////    public static void main(String[] args){
 ////        System.out.println(getTripTimeSet(config).size());
 ////    }
@@ -177,4 +177,4 @@
 //        }
 //        return tripTimeOuterMap;
 //    }
-//}
+}
