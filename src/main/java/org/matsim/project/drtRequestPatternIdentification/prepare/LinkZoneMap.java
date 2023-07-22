@@ -19,19 +19,17 @@ import java.util.Map;
 
 public class LinkZoneMap {
 
-    public static void main(String[] args) {
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
-        if (args.length != 0) {
-            configPath = args[0];
-        }
-        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
-        linkZoneMap(config);
-    }
+//    public static void main(String[] args) {
+//        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
+//        if (args.length != 0) {
+//            configPath = args[0];
+//        }
+//        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
+//        linkZoneMap(config);
+//    }
 
-    public static Map<Id<Link>,Integer> linkZoneMap(Config config){
+    public static Map<Id<Link>,Integer> linkZoneMap(Network network){
 
-        Scenario scenario = ScenarioUtils.loadScenario(config);
-        Network network = scenario.getNetwork();// 获取MATSim中的Network对象
 
         // 获取网络的边界坐标
         Coord minCoord = getMinCoord(network);
