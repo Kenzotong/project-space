@@ -27,7 +27,7 @@ public class RunDemandZoneMatch {
         Network network = scenario.getNetwork();
 //
 //        // Get drt demands
-//        List<DrtDemand> drtDemands = DrtDemandsSet.getDrtDemandsSet(config);
+//        List<DrtDemand> drtDemands = DrtDemandsList.getDrtDemandsSet(config);
 //
 //        Map<String, Object> tripInfoMap = DRTPathZoneSequence.drtPathZoneMap(config);//得到trip的两个map
 //        Map<Integer, List<Integer>> tripPathZoneMap = (Map<Integer, List<Integer>>) tripInfoMap.get("tripPathZoneMap");//得到trip和其经过path的map

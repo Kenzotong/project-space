@@ -4,7 +4,6 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.drt.run.DrtConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
@@ -57,7 +56,7 @@ public class ZonePoolingCalculator {
         Population population = scenario.getPopulation();
 
         // Get drt demands
-        List<DrtDemand> drtDemands = DrtDemandsSet.getDrtDemandsSet(network, population);
+        List<DrtDemand> drtDemands = DrtDemandsList.getDrtDemandsList(network, population);
 
         Map<String, Object> tripInfoMap = DRTPathZoneSequence.drtPathZoneMap(network, population);//得到trip的两个map
         Map<Integer, List<Integer>> tripPathZoneMap = (Map<Integer, List<Integer>>) tripInfoMap.get("tripPathZoneMap");//得到trip和其经过path的map

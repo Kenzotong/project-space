@@ -17,7 +17,6 @@ import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 
 import java.util.*;
@@ -54,7 +53,7 @@ public class RunMatchDemand {
         double stopDuration = drtConfigGroup.stopDuration;
 
         // Get drt demands
-        List<DrtDemand> drtDemands = DrtDemandsSet.getDrtDemandsSet(network, population);
+        List<DrtDemand> drtDemands = DrtDemandsList.getDrtDemandsList(network, population);
 
         TravelTime travelTime = new QSimFreeSpeedTravelTime(1);
         TravelDisutility travelDisutility = new OnlyTimeDependentTravelDisutility(travelTime);

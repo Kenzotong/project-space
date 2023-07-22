@@ -17,7 +17,6 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.Tools;
-import org.matsim.project.drtRequestPatternIdentification.shareability.PairwisePoolingCalculator;
 import org.matsim.project.utils.LinkToLinkTravelTimeMatrix;
 
 import java.util.*;
@@ -57,7 +56,7 @@ public class RunDemandWithTTM {
         double stopDuration = drtConfigGroup.stopDuration;
 
         // Get drt demands
-        List<DrtDemand> drtDemands = DrtDemandsSet.getDrtDemandsSet(network, population);
+        List<DrtDemand> drtDemands = DrtDemandsList.getDrtDemandsList(network, population);
 
         // initialize travelTimeMatrix (based on free speed)
         TravelTime travelTime = new QSimFreeSpeedTravelTime(1);

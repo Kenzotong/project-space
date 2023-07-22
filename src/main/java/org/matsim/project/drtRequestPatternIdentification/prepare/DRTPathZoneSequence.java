@@ -2,46 +2,38 @@ package org.matsim.project.drtRequestPatternIdentification.prepare;
 
 
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Population;
-import org.matsim.contrib.drt.run.DrtConfigGroup;
-import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.speedy.SpeedyALTFactory;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
-import scala.Int;
 
 import java.util.*;
 
 public class DRTPathZoneSequence {
 
 
-    public static void main(String[] args) {
-
-        // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
-        if (args.length != 0) {
-            configPath = args[0];
-        }
-        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
-        Scenario scenario = ScenarioUtils.loadScenario(config);
-        MultiModeDrtConfigGroup multiModeDrtConfig = MultiModeDrtConfigGroup.get(config);
-        DrtConfigGroup drtConfigGroup = multiModeDrtConfig.getModalElements().iterator().next();
-        Network network = scenario.getNetwork();
-        Population population = scenario.getPopulation();
-
-        Map<Integer, List<Integer>> tripPathZoneMap = (Map<Integer, List<Integer>>) drtPathZoneMap(network, population).get("tripPathZoneMap");
-    }
+//    public static void main(String[] args) {
+//
+//        // Create scenario based on config file
+//        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
+//        if (args.length != 0) {
+//            configPath = args[0];
+//        }
+//        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
+//        Scenario scenario = ScenarioUtils.loadScenario(config);
+//        MultiModeDrtConfigGroup multiModeDrtConfig = MultiModeDrtConfigGroup.get(config);
+//        DrtConfigGroup drtConfigGroup = multiModeDrtConfig.getModalElements().iterator().next();
+//        Network network = scenario.getNetwork();
+//        Population population = scenario.getPopulation();
+//
+//        Map<Integer, List<Integer>> tripPathZoneMap = (Map<Integer, List<Integer>>) drtPathZoneMap(network, population).get("tripPathZoneMap");
+//    }
 
     public static Map<String, Object> drtPathZoneMap(Network network, Population population){
 
@@ -51,7 +43,7 @@ public class DRTPathZoneSequence {
         LeastCostPathCalculator router = new SpeedyALTFactory().createPathCalculator(network, travelDisutility, travelTime);
 
         // Get drt trip set
-        List<DrtDemand> drtDemandsSet = DrtDemandsSet.getDrtDemandsSet(network, population);
+        List<DrtDemand> drtDemandsSet = DrtDemandsList.getDrtDemandsList(network, population);
 //        System.out.println("number of trips is: " + drtDemandsSet.size());
 
         Map<Integer, List<Integer>> tripPathZoneMap = new HashMap<>();
