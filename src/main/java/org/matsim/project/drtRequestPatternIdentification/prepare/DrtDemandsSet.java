@@ -26,12 +26,8 @@ public class DrtDemandsSet {
 //        System.out.println(getDrtDemandsSet(config));
 //    }
 
-    public static List<DrtDemand> getDrtDemandsSet(Config config){
+    public static List<DrtDemand> getDrtDemandsSet(Network network, Population population){
         List<DrtDemand> demands = new ArrayList<>();
-
-        Scenario scenario = ScenarioUtils.loadScenario(config);
-        Network network = scenario.getNetwork();
-        Population population = scenario.getPopulation();
 
         MainModeIdentifier mainModeIdentifier = new DefaultAnalysisMainModeIdentifier();
 

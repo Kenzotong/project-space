@@ -6,6 +6,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
@@ -24,6 +25,7 @@ import java.util.*;
 
 public class DRTPathZoneSequence {
 
+
 //    public static void main(String[] args) {
 //
 //        // Create scenario based on config file
@@ -38,10 +40,7 @@ public class DRTPathZoneSequence {
 //        System.out.println(tripNumberMap);
 //    }
 
-    public static Map<String, Object> drtPathZoneMap(Config config){
-
-        Scenario scenario = ScenarioUtils.loadScenario(config);
-        Network network = scenario.getNetwork();
+    public static Map<String, Object> drtPathZoneMap(Network network, Population population){
 
         // Create router (based on free speed)
         TravelTime travelTime = new QSimFreeSpeedTravelTime(1);
@@ -49,12 +48,12 @@ public class DRTPathZoneSequence {
         LeastCostPathCalculator router = new SpeedyALTFactory().createPathCalculator(network, travelDisutility, travelTime);
 
         // Get drt trip set
-        List<DrtDemand> drtDemandsSet = DrtDemandsSet.getDrtDemandsSet(config);
-        System.out.println("number of trips is: " + drtDemandsSet.size());
+        List<DrtDemand> drtDemandsSet = DrtDemandsSet.getDrtDemandsSet(network, population);
+//        System.out.println("number of trips is: " + drtDemandsSet.size());
 
         Map<Integer, List<Integer>> tripPathZoneMap = new HashMap<>();
         Map<Integer, DrtDemand> tripNumberMap = new HashMap<>();
-        Map<Id<Link>,Integer> linkZoneMap = LinkZoneMap.linkZoneMap(config);//获取link对应的zone的map
+        Map<Id<Link>,Integer> linkZoneMap = LinkZoneMap.linkZoneMap(network);//获取link对应的zone的map
         Map<String, Object> tripInfoMap = new HashMap<>();
 
         int tripNumber = 1;
