@@ -2,21 +2,27 @@ package org.matsim.project.drtRequestPatternIdentification.prepare;
 
 
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Population;
+import org.matsim.contrib.drt.run.DrtConfigGroup;
+import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
+import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.speedy.SpeedyALTFactory;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 
 import java.util.*;
 
 public class DRTPathZoneSequence {
-
 
 //    public static void main(String[] args) {
 //
@@ -25,6 +31,7 @@ public class DRTPathZoneSequence {
 //        if (args.length != 0) {
 //            configPath = args[0];
 //        }
+//
 //        Config config = ConfigUtils.loadConfig(configPath, new MultiModeDrtConfigGroup(), new DvrpConfigGroup());
 //        Scenario scenario = ScenarioUtils.loadScenario(config);
 //        MultiModeDrtConfigGroup multiModeDrtConfig = MultiModeDrtConfigGroup.get(config);
@@ -59,8 +66,8 @@ public class DRTPathZoneSequence {
         //遍历trip，创建path zone map
         for (DrtDemand demand: drtDemandsSet) {
 
-            List<Integer> pathZoneList = new ArrayList<>();//每个trip有单独的zone list(zone有重复）
-            List<Integer> uniquePathZoneList;//无重复的zone list
+            List<Integer> pathZoneList = new ArrayList<>();//该trip经过路径上的zone list(zone有重复）
+            List<Integer> uniquePathZoneList = new ArrayList<>();;//该trip无重复的zone list
 
             Link fromLink = demand.fromLink();
             Link toLink = demand.toLink();
@@ -72,16 +79,17 @@ public class DRTPathZoneSequence {
 
             //遍历这个当前link list，为每一个link找到对应的zone，并创建该路径经过的zone的list
             for(Link link : pathLinkList){
+
                 Id<Link> linkId = link.getId();
                 int zoneId = linkZoneMap.get(linkId);//得到zone id
-                pathZoneList.add(zoneId);//将经过的zone按顺序添加进zoneList
+                pathZoneList.add(zoneId);//该trip的路径集合，将经过的zone按顺序添加进zoneList
 
                 //创建一个无重复项的zone list（将上面得到的list进行去重）
                 Set<Integer> uniquePathZoneSet = new LinkedHashSet<>(pathZoneList); //将原来有重复项的list，转化为无重复项且保留顺序的set
                 uniquePathZoneList = new ArrayList<>(uniquePathZoneSet);
-                demandPathMap.put(uniquePathZoneList, demand);//将该demand和其路径作为键值对加入map，方便后续根据demand查找路径list
-                listOfUniquePathZoneList.add(uniquePathZoneList);//将该demand的路径，list加入收集所有路径的，方便后续排序
             }
+            demandPathMap.put(uniquePathZoneList, demand);//将该demand和其路径作为键值对加入map，方便后续根据demand查找路径list
+            listOfUniquePathZoneList.add(uniquePathZoneList);//将该demand的路径，list加入收集所有路径的，方便后续排序
         }
 
         listOfUniquePathZoneList.sort((list1, list2) -> list2.size() - list1.size());//将demand按照从长到短重新排序
@@ -95,6 +103,7 @@ public class DRTPathZoneSequence {
 
             tripNumber++;
         }
+//        System.out.println(listOfUniquePathZoneList.size());
 
 
 
