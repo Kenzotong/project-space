@@ -59,7 +59,10 @@ public class LinkZoneMap {
         Coord maxCoord = getMaxCoord(network);
 
         double zoneSize = averageDistance * 0.1; // 平均行驶里程的10%作为zone的尺寸
-        log.info("zone size of this network is: " + zoneSize);
+        if(zoneSize > 1000){
+            zoneSize = 1000;
+        }
+        log.info("zone size of this network is: " + zoneSize + " meters");
         double minX = minCoord.getX();
         double minY = minCoord.getY();
         double maxX = maxCoord.getX();

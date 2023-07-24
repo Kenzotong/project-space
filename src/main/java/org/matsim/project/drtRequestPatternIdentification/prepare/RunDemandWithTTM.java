@@ -18,6 +18,7 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.Tools;
 import org.matsim.project.utils.LinkToLinkTravelTimeMatrix;
+import scala.Int;
 
 import java.util.*;
 
@@ -28,7 +29,7 @@ public class RunDemandWithTTM {
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\New-York-Manhattan\\nyc-drt.config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Berlin-DRT-random-selection\\berlin_drt_config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -66,21 +67,32 @@ public class RunDemandWithTTM {
         Set<Id<Link>> relevantLinks = Tools.collectRelevantLink(drtDemands);//收集所有trip的起终link Id
         LinkToLinkTravelTimeMatrix travelTimeMatrix = new LinkToLinkTravelTimeMatrix(network, travelTime, relevantLinks, 0);
 
-        int numOfMatch = 0;
+        double numOfMatchK2 = 0;
+        double numOfMatchK3 = 0;
         double totalTravelTime = 0;
-        double pooledTravelTime = 0;
+        double pooledTravelTimeK2 = 0;
+        double pooledTravelTimeK3 = 0;
 
-        HashSet<Integer> pooledDemand = new HashSet<>();
+        //(K=2) 空间上和时间上判断两个行程是否match
+/*        HashSet<Integer> pooledDemand = new HashSet<>();
 
-        //空间上和时间上判断两个行程是否match
         log.info("---------------------------------------");
-        log.info("start matching...");
+        log.info("start matching (shared by 2 trips)...");
         for (int i = 1; i <= tripPathZoneMap.size(); i++){
+            //检查supplier(长)是否之前已经被分配了
+            if(pooledDemand.contains(i)){
+                continue;
+            }
             List<Integer> supplierPathZoneList = tripPathZoneMap.get(i);
 //            log.info("this supplier number is: " + i + ", path zone size is: " + supplierPathZoneList.size());
             DrtDemand supplier = tripNumberMap.get(i);//get demand 1 （supplier）
-            double directTravelTime1 = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.toLink(), supplier.departureTime());
-            totalTravelTime += directTravelTime1;
+
+            double supplierDirectTravelTime1 = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.toLink(), supplier.departureTime());
+            double supplierLatestDepartureTime = supplier.departureTime() + maxWaitTime;
+            double supplierLatestArrivalTime = supplier.departureTime() + alpha * supplierDirectTravelTime1 + beta;
+
+
+            totalTravelTime += supplierDirectTravelTime1;
             for (int j = 1; j <= tripPathZoneMap.size(); j++){
                 List<Integer> demanderPathZoneList = tripPathZoneMap.get(j);
 //                log.info("this demander number is: " + j + ", path zone size is: " + demanderPathZoneList.size());
@@ -88,29 +100,26 @@ public class RunDemandWithTTM {
                 if(supplier == demander){
                     continue;
                 }
-                //检查demander(短)是否作为demander之前已经被pick up了
+                //检查demander(短)是否之前已经被分配了
                 if(pooledDemand.contains(j)){
                     continue;
                 }
 
                 if(Collections.indexOfSubList(supplierPathZoneList, demanderPathZoneList) != -1){//判断supplier的行程是否包含demander的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
-                    double directTravelTime2 = travelTimeMatrix.getTravelTime(demander.fromLink(), demander.toLink(), demander.departureTime());
 
-                    double supplierLatestDepartureTime = supplier.departureTime() + maxWaitTime;
+                    double demanderDirectTravelTime = travelTimeMatrix.getTravelTime(demander.fromLink(), demander.toLink(), demander.departureTime());
                     double demanderLatestDepartureTime = demander.departureTime() + maxWaitTime;
-
-                    double supplierLatestArrivalTime = supplier.departureTime() + alpha * directTravelTime1 + beta;
-                    double demanderLatestArrivalTime = demander.departureTime() + alpha * directTravelTime2 + beta;
+                    double demanderLatestArrivalTime = demander.departureTime() + alpha * demanderDirectTravelTime + beta;
 
                     //判断这两个trip在时间上是否match （o1,o2,d2,d1）
                     //O2的最晚出发时间 > O1出发从O1到O2的到达时间（理想情况）
                     double now = supplier.departureTime() + stopDuration;//supplier是o1和d1，demander是o2和d2
-                    double o1o2 = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.fromLink(), now);
+                    double o1o2 = travelTimeMatrix.getTravelTime(supplier.fromLink(), demander.fromLink(), now);
                     double arrivalTimeO2 = now + o1o2; //o2 实际到达时间
                     //demander出发时间 <= demander最晚出发时间
                     if (arrivalTimeO2 <= demanderLatestDepartureTime) {
                         now = arrivalTimeO2 + stopDuration;
-                        double arrivalTimeD2 = now + directTravelTime2;
+                        double arrivalTimeD2 = now + demanderDirectTravelTime;
                         //o2到d2的时间 <= demander的最晚到达
                         if (arrivalTimeD2 <= demanderLatestArrivalTime) {
                             now = arrivalTimeD2 + stopDuration;
@@ -118,9 +127,10 @@ public class RunDemandWithTTM {
                             double arrivalTimeD1 = now + d2d1;
                             //d2到d1的时间 <= d1的最晚到达
                             if (arrivalTimeD1 <= supplierLatestArrivalTime){
-                                numOfMatch++;
-                                pooledDemand.add(j);//demand j作为demander 2已经被picked up，加入该列表，之后跳过
-                                pooledTravelTime += directTravelTime2;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中
+                                numOfMatchK2++;
+                                pooledDemand.add(i);//demand i作为 supplier 已经被分配了，加入该列表，之后跳过
+                                pooledDemand.add(j);//demand j作为 demander 已经被分配，加入该列表，之后跳过
+                                pooledTravelTimeK2 += demanderDirectTravelTime;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中
                                 break;
                             }
                         }
@@ -128,26 +138,265 @@ public class RunDemandWithTTM {
                 }
             }
         }
-//        CoordUtils.calcEuclideanDistance(from Coord, toCoord) //计算两点之间的距离 to node到to node
+        log.info("matching (shared by 2 trips) was over");
 
-//        int numOfTotalPairs = (drtDemands.size() * drtDemands.size() - 1)/2;
+        //        int numOfTotalPairs = (drtDemands.size() * drtDemands.size() - 1)/2;
         int numOfTotalDemands = drtDemands.size();
 //        double shareRate = (double) numOfMatch / numOfTotalPairs * 100;
-        double rateOfSavingCar = (double) numOfMatch / numOfTotalDemands * 100;
-        double rateOfSavingTime = pooledTravelTime / totalTravelTime * 100;
+        double rateOfSavingCar = numOfMatchK2 / numOfTotalDemands * 100;
+        double rateOfSavingTime = pooledTravelTimeK2 / totalTravelTime * 100;
+
+//        log.info("number of total pairs is: " + numOfTotalPairs);
+        log.info("---------------------------------------");
+        log.info("ONLY SHARED BY 2 TRIPS");
+        log.info("number of total demands is: " + numOfTotalDemands);
+        log.info("number of match is: " + numOfMatchK2);
+        log.info("---------------------------------------");
+        log.info("total travel time is: " + totalTravelTime);
+        log.info("saving travel time is: " + pooledTravelTimeK2);
+//        log.info("trip share rate is: " + shareRate + "%");
+        log.info("---------------------------------------");
+        log.info("rate of saving car is: " + rateOfSavingCar + "%");
+        log.info("rate of saving travel time is:" + rateOfSavingTime + "%");*/
+
+       //(K=3) 空间上和时间上判断三个行程是否match
+ /*        Map<Integer,List<Integer>> shareablePairsMap = new LinkedHashMap<>();//key为supplier，value为demander,有顺序的
+        HashSet<Integer> pooledDemandK3 = new HashSet<>();//收集已经匹配的demand
+
+        log.info("---------------------------------------");
+        log.info("pair map is started creating (shared by 2 trips)...");
+
+        //收集所有可共享的两两配对
+        for (int i = 1; i <= tripPathZoneMap.size(); i++){
+            List<Integer> shareablePairs = new ArrayList<>();
+            List<Integer> supplierPathZoneList = tripPathZoneMap.get(i);
+            DrtDemand supplier = tripNumberMap.get(i);//get demand 1 （supplier）
+
+            double supplierDirectTravelTime = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.toLink(), supplier.departureTime());
+            double supplierLatestDepartureTime = supplier.departureTime() + maxWaitTime;
+            double supplierLatestArrivalTime = supplier.departureTime() + alpha * supplierDirectTravelTime + beta;
+
+            totalTravelTime += supplierDirectTravelTime;
+            for (int j = 1; j <= tripPathZoneMap.size(); j++){
+                List<Integer> demanderPathZoneList = tripPathZoneMap.get(j);
+                DrtDemand demander = tripNumberMap.get(j);//get demand2 （demander）
+                if(supplier == demander){
+                    continue;
+                }
+
+                if(Collections.indexOfSubList(supplierPathZoneList, demanderPathZoneList) != -1){//判断supplier的行程是否包含demander的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
+
+                    double demanderDirectTravelTime = travelTimeMatrix.getTravelTime(demander.fromLink(), demander.toLink(), demander.departureTime());
+                    double demanderLatestDepartureTime = demander.departureTime() + maxWaitTime;
+                    double demanderLatestArrivalTime = demander.departureTime() + alpha * demanderDirectTravelTime + beta;
+
+                    //判断这两个trip在时间上是否match （o1,o2,d2,d1）
+                    //O2的最晚出发时间 > O1出发从O1到O2的到达时间（理想情况）
+                    double now = supplier.departureTime() + stopDuration;//supplier是o1和d1，demander是o2和d2
+                    double o1o2 = travelTimeMatrix.getTravelTime(supplier.fromLink(), demander.fromLink(), now);
+                    double arrivalTimeO2 = now + o1o2; //o2 实际到达时间
+                    //demander出发时间 <= demander最晚出发时间
+                    if (arrivalTimeO2 <= demanderLatestDepartureTime) {
+                        now = arrivalTimeO2 + stopDuration;
+                        double arrivalTimeD2 = now + demanderDirectTravelTime;
+                        //o2到d2的时间 <= demander的最晚到达
+                        if (arrivalTimeD2 <= demanderLatestArrivalTime) {
+                            now = arrivalTimeD2 + stopDuration;
+                            double d2d1 = travelTimeMatrix.getTravelTime(demander.toLink(), supplier.toLink(), now);
+                            double arrivalTimeD1 = now + d2d1;
+                            //d2到d1的时间 <= d1的最晚到达
+                            if (arrivalTimeD1 <= supplierLatestArrivalTime){
+                                shareablePairs.add(j);//将可以匹配的demander加入 shareable pairs中
+                            }
+                        }
+                    }
+                }
+            }
+            shareablePairsMap.put(i,shareablePairs);//获得map：supplier作为key，所有可以和它匹配的demander为value
+        }
+
+        log.info("pair map was successfully created (shared by 2 trips)");
+        log.info("---------------------------------------");
+        log.info("start matching (shared by 3 trips)...");
+
+        //判断空间上三个demand是否匹配
+        for (int x : shareablePairsMap.keySet()){
+            //判断是否已经匹配过了
+            if(pooledDemandK3.contains(x)){
+                continue;
+            }
+
+            if (!shareablePairsMap.get(x).isEmpty()) {
+                for (int i = 0; i <= shareablePairsMap.get(x).size() - 1; i++) {
+                    int y = shareablePairsMap.get(x).get(i);
+                    //判断是否已经匹配过了
+                    if (pooledDemandK3.contains(y)) {
+                        continue;
+                    }
+
+                    if (shareablePairsMap.containsKey(y)) {
+                        if (!shareablePairsMap.get(y).isEmpty()) {
+                            for (int j = 0; j <= shareablePairsMap.get(y).size() - 1; j++) {
+                                int z = shareablePairsMap.get(y).get(j);
+                                //判断是否已经匹配过了
+                                if (pooledDemandK3.contains(z)) {
+                                    continue;
+                                }
+
+                                if (shareablePairsMap.get(x).contains(z)) {
+                                    ////判断这三个trip在时间上是否match （o1,o2,o3,d3,d2,d1）
+                                    DrtDemand mainSupplier = tripNumberMap.get(x);//得到最长的demand
+                                    double mainSupplierDirectTravelTime = travelTimeMatrix.getTravelTime(mainSupplier.fromLink(), mainSupplier.toLink(), mainSupplier.departureTime());
+                                    double mainSupplierLatestDepartureTime = mainSupplier.departureTime() + maxWaitTime;
+                                    double mainSupplierLatestArrivalTime = mainSupplier.departureTime() + alpha * mainSupplierDirectTravelTime + beta;
+
+                                    DrtDemand subSupplier = tripNumberMap.get(y);//得到中间的demand
+                                    double subSupplierDirectTravelTime = travelTimeMatrix.getTravelTime(subSupplier.fromLink(), subSupplier.toLink(), subSupplier.departureTime());
+                                    double subSupplierLatestDepartureTime = subSupplier.departureTime() + maxWaitTime;
+                                    double subSupplierLatestArrivalTime = subSupplier.departureTime() + alpha * subSupplierDirectTravelTime + beta;
+
+                                    DrtDemand demander = tripNumberMap.get(z);//得到最短的demand
+                                    double demanderDirectTravelTime = travelTimeMatrix.getTravelTime(demander.fromLink(), demander.toLink(), demander.departureTime());
+                                    double demanderLatestDepartureTime = demander.departureTime() + maxWaitTime;
+                                    double demanderLatestArrivalTime = demander.departureTime() + alpha * demanderDirectTravelTime + beta;
+
+                                    //O2的最晚出发时间 > O1出发从O1到O2的到达时间（理想情况）
+                                    double now = mainSupplier.departureTime() + stopDuration;//main supplier是o1和d1，sub supplier是o2和d2，demander是o3和d3
+                                    double o1o2 = travelTimeMatrix.getTravelTime(mainSupplier.fromLink(), subSupplier.fromLink(), now);
+                                    double arrivalTimeO2 = now + o1o2; //o2 实际到达时间
+                                    //o2的到达时间 <= o2最晚出发时间
+                                    if (arrivalTimeO2 <= subSupplierLatestDepartureTime) {
+                                        now = arrivalTimeO2 + stopDuration;
+                                        double o2o3 = travelTimeMatrix.getTravelTime(subSupplier.fromLink(), demander.fromLink(), now);
+                                        double arrivalTimeO3 = now + o2o3;
+                                        //o3的到达时间 <= o3最晚出发时间
+                                        if (arrivalTimeO3 <= demanderLatestDepartureTime) {
+                                            now = arrivalTimeO3 + stopDuration;
+                                            double arrivalTimeD3 = now + demanderDirectTravelTime;
+                                            //o3到d3的时间 <= demander的最晚到达
+                                            if (arrivalTimeD3 <= demanderLatestArrivalTime) {
+                                                now = arrivalTimeD3 + stopDuration;
+                                                double d3d2 = travelTimeMatrix.getTravelTime(demander.toLink(), subSupplier.toLink(), now);
+                                                double arrivalTimeD2 = now + d3d2;
+                                                //d2的到达时间 <= sub supplier的最晚达到
+                                                if (arrivalTimeD2 <= subSupplierLatestArrivalTime) {
+                                                    now = arrivalTimeD2 + stopDuration;
+                                                    double d2d1 = travelTimeMatrix.getTravelTime(subSupplier.toLink(), mainSupplier.toLink(), now);
+                                                    double arrivalTimeD1 = now + d2d1;
+                                                    //d1的到达时间 <= d1最晚到达
+                                                    if (arrivalTimeD1 <= mainSupplierLatestArrivalTime) {
+                                                        numOfMatchK3 += 2;
+                                                        pooledDemandK3.add(x);
+                                                        pooledDemandK3.add(y);
+                                                        pooledDemandK3.add(z);
+                                                        pooledTravelTimeK3 += demanderDirectTravelTime + subSupplierDirectTravelTime;
+
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        log.info("matching (shared by 3 trips) was over");
+        log.info("---------------------------------------");
+        log.info("start matching (shared by 2 trips)...");
+
+        HashSet<Integer> pooledDemandK2 = new HashSet<>();//收集已经匹配的demand
+
+        for (int i = 1; i <= tripPathZoneMap.size(); i++){
+            //检查supplier(长)是否在k=3时已经被分配了
+            if(pooledDemandK3.contains(i)){
+                continue;
+            }
+            //检查supplier(长)是否在k=2时已经被分配了
+            if(pooledDemandK2.contains(i)){
+                continue;
+            }
+            List<Integer> supplierPathZoneList = tripPathZoneMap.get(i);
+            DrtDemand supplier = tripNumberMap.get(i);//get demand 1 （supplier）
+
+            double supplierDirectTravelTime1 = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.toLink(), supplier.departureTime());
+            double supplierLatestDepartureTime = supplier.departureTime() + maxWaitTime;
+            double supplierLatestArrivalTime = supplier.departureTime() + alpha * supplierDirectTravelTime1 + beta;
+
+
+            for (int j = 1; j <= tripPathZoneMap.size(); j++){
+                List<Integer> demanderPathZoneList = tripPathZoneMap.get(j);
+//                log.info("this demander number is: " + j + ", path zone size is: " + demanderPathZoneList.size());
+                DrtDemand demander = tripNumberMap.get(j);//get demand2 （demander）
+                if(supplier == demander){
+                    continue;
+                }
+                //检查demander(短)是否在k=3时已经被分配了
+                if(pooledDemandK3.contains(j)){
+                    continue;
+                }
+                //检查demander(短)是否在k=2时已经被分配了
+                if(pooledDemandK2.contains(j)){
+                    continue;
+                }
+
+                if(Collections.indexOfSubList(supplierPathZoneList, demanderPathZoneList) != -1){//判断supplier的行程是否包含demander的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
+
+                    double demanderDirectTravelTime = travelTimeMatrix.getTravelTime(demander.fromLink(), demander.toLink(), demander.departureTime());
+                    double demanderLatestDepartureTime = demander.departureTime() + maxWaitTime;
+                    double demanderLatestArrivalTime = demander.departureTime() + alpha * demanderDirectTravelTime + beta;
+
+                    //判断这两个trip在时间上是否match （o1,o2,d2,d1）
+                    //O2的最晚出发时间 > O1出发从O1到O2的到达时间（理想情况）
+                    double now = supplier.departureTime() + stopDuration;//supplier是o1和d1，demander是o2和d2
+                    double o1o2 = travelTimeMatrix.getTravelTime(supplier.fromLink(), demander.fromLink(), now);
+                    double arrivalTimeO2 = now + o1o2; //o2 实际到达时间
+                    //demander出发时间 <= demander最晚出发时间
+                    if (arrivalTimeO2 <= demanderLatestDepartureTime) {
+                        now = arrivalTimeO2 + stopDuration;
+                        double arrivalTimeD2 = now + demanderDirectTravelTime;
+                        //o2到d2的时间 <= demander的最晚到达
+                        if (arrivalTimeD2 <= demanderLatestArrivalTime) {
+                            now = arrivalTimeD2 + stopDuration;
+                            double d2d1 = travelTimeMatrix.getTravelTime(demander.toLink(), supplier.toLink(), now);
+                            double arrivalTimeD1 = now + d2d1;
+                            //d2到d1的时间 <= d1的最晚到达
+                            if (arrivalTimeD1 <= supplierLatestArrivalTime){
+                                numOfMatchK2++;
+                                pooledDemandK2.add(i);//demand i作为 supplier 已经被分配了，加入该列表，之后跳过
+                                pooledDemandK2.add(j);//demand j作为 demander 已经被分配，加入该列表，之后跳过
+                                pooledTravelTimeK2 += demanderDirectTravelTime;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        log.info("matching (shared by 2 trips) was over");
+
+
+        //        int numOfTotalPairs = (drtDemands.size() * drtDemands.size() - 1)/2;
+        int numOfTotalDemands = drtDemands.size();
+//        double shareRate = (double) numOfMatch / numOfTotalPairs * 100;
+        double rateOfSavingCar = (numOfMatchK2 + numOfMatchK3) / numOfTotalDemands * 100;
+        double rateOfSavingTime = (pooledTravelTimeK2 + pooledTravelTimeK3) / totalTravelTime * 100;
 
 //        log.info("number of total pairs is: " + numOfTotalPairs);
         log.info("---------------------------------------");
         log.info("number of total demands is: " + numOfTotalDemands);
-        log.info("number of match is: " + numOfMatch);
+        log.info("number of match (only shared by 2 trips) is: " + numOfMatchK2);
+        log.info("number of match (only shared by 3 trips) is: " + numOfMatchK3);
         log.info("---------------------------------------");
         log.info("total travel time is: " + totalTravelTime);
-        log.info("saving travel time is: " + pooledTravelTime);
+        log.info("saving travel time (only shared by 2 trips) is: " + pooledTravelTimeK2);
+        log.info("saving travel time (only shared by 3 trips) is: " + pooledTravelTimeK3);
 //        log.info("trip share rate is: " + shareRate + "%");
         log.info("---------------------------------------");
         log.info("rate of saving car is: " + rateOfSavingCar + "%");
-        log.info("rate of saving travel time is:" + rateOfSavingTime + "%");
-
-
+        log.info("rate of saving travel time is:" + rateOfSavingTime + "%");*/
     }
 }
