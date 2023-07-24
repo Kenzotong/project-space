@@ -45,9 +45,12 @@ public class RunDemandWithTTM {
         Network network = scenario.getNetwork();
         Population population = scenario.getPopulation();
 
+        log.info("trip information map is started creating...");
         Map<String, Object> tripInfoMap = DRTPathZoneSequence.drtPathZoneMap(network, population);//得到trip的两个map
         Map<Integer, List<Integer>> tripPathZoneMap = (Map<Integer, List<Integer>>) tripInfoMap.get("tripPathZoneMap");//得到trip和其经过path的map
+//        log.info("there is " + tripPathZoneMap.size() + " trips");
         Map<Integer, DrtDemand> tripNumberMap = (Map<Integer, DrtDemand>) tripInfoMap.get("tripNumberMap");
+//        log.info("there is " + tripNumberMap.size() + " trips");
 
         // Getting drt setups
         double alpha = drtConfigGroup.maxTravelTimeAlpha;
@@ -70,14 +73,17 @@ public class RunDemandWithTTM {
         HashSet<Integer> pooledDemand = new HashSet<>();
 
         //空间上和时间上判断两个行程是否match
+        log.info("---------------------------------------");
         log.info("start matching...");
         for (int i = 1; i <= tripPathZoneMap.size(); i++){
             List<Integer> supplierPathZoneList = tripPathZoneMap.get(i);
+//            log.info("this supplier number is: " + i + ", path zone size is: " + supplierPathZoneList.size());
             DrtDemand supplier = tripNumberMap.get(i);//get demand 1 （supplier）
             double directTravelTime1 = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.toLink(), supplier.departureTime());
             totalTravelTime += directTravelTime1;
             for (int j = 1; j <= tripPathZoneMap.size(); j++){
-                List<Integer> demand2PathZoneList = tripPathZoneMap.get(j);
+                List<Integer> demanderPathZoneList = tripPathZoneMap.get(j);
+//                log.info("this demander number is: " + j + ", path zone size is: " + demanderPathZoneList.size());
                 DrtDemand demander = tripNumberMap.get(j);//get demand2 （demander）
                 if(supplier == demander){
                     continue;
@@ -87,7 +93,7 @@ public class RunDemandWithTTM {
                     continue;
                 }
 
-                if(Collections.indexOfSubList(supplierPathZoneList, demand2PathZoneList) != -1){//判断supplier的行程是否包含demander的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
+                if(Collections.indexOfSubList(supplierPathZoneList, demanderPathZoneList) != -1){//判断supplier的行程是否包含demander的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
                     double directTravelTime2 = travelTimeMatrix.getTravelTime(demander.fromLink(), demander.toLink(), demander.departureTime());
 
                     double supplierLatestDepartureTime = supplier.departureTime() + maxWaitTime;
@@ -131,6 +137,7 @@ public class RunDemandWithTTM {
         double rateOfSavingTime = pooledTravelTime / totalTravelTime * 100;
 
 //        log.info("number of total pairs is: " + numOfTotalPairs);
+        log.info("---------------------------------------");
         log.info("number of total demands is: " + numOfTotalDemands);
         log.info("number of match is: " + numOfMatch);
         log.info("---------------------------------------");

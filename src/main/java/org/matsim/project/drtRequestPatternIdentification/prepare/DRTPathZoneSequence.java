@@ -1,6 +1,8 @@
 package org.matsim.project.drtRequestPatternIdentification.prepare;
 
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
@@ -42,6 +44,8 @@ public class DRTPathZoneSequence {
 //        Map<Integer, List<Integer>> tripPathZoneMap = (Map<Integer, List<Integer>>) drtPathZoneMap(network, population).get("tripPathZoneMap");
 //    }
 
+    private static final Logger log = LogManager.getLogger(DRTPathZoneSequence.class);
+
     public static Map<String, Object> drtPathZoneMap(Network network, Population population){
 
         // Create router (based on free speed)
@@ -49,14 +53,18 @@ public class DRTPathZoneSequence {
         TravelDisutility travelDisutility = new OnlyTimeDependentTravelDisutility(travelTime);
         LeastCostPathCalculator router = new SpeedyALTFactory().createPathCalculator(network, travelDisutility, travelTime);
 
-        // Get drt trip set
+        // Get drt trip list
+        log.info("---------------------------------------");
+        log.info("drt trip list is started creating...");
         List<DrtDemand> drtDemandsSet = DrtDemandsList.getDrtDemandsList(network, population);
 //        System.out.println("number of trips is: " + drtDemandsSet.size());
+        log.info("drt trip list was successfully created");
+        log.info("---------------------------------------");
 
         Map<Integer, List<Integer>> tripPathZoneMap = new HashMap<>();
         Map<Integer, DrtDemand> tripNumberMap = new HashMap<>();
         Map<List<Integer>, DrtDemand> demandPathMap = new HashMap<>();
-        Map<Id<Link>,Integer> linkZoneMap = LinkZoneMap.linkZoneMap(network);//获取link对应的zone的map
+        Map<Id<Link>,Integer> linkZoneMap = LinkZoneMap.linkZoneMap(network, population);//获取link对应的zone的map
         Map<String, Object> tripInfoMap = new HashMap<>();
 
         List<List<Integer>> listOfUniquePathZoneList = new ArrayList<>(); //保存所有demand行驶经过的zone列表，用于长短demand排序
@@ -64,6 +72,8 @@ public class DRTPathZoneSequence {
         int tripNumber = 1;
 
         //遍历trip，创建path zone map
+        log.info("---------------------------------------");
+        log.info("path zone map is started creating...");
         for (DrtDemand demand: drtDemandsSet) {
 
             List<Integer> pathZoneList = new ArrayList<>();//该trip经过路径上的zone list(zone有重复）
@@ -104,7 +114,8 @@ public class DRTPathZoneSequence {
             tripNumber++;
         }
 //        System.out.println(listOfUniquePathZoneList.size());
-
+        log.info("path zone map was successfully created");
+        log.info("---------------------------------------");
 
 
         tripInfoMap.put("tripPathZoneMap", tripPathZoneMap);

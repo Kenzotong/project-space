@@ -1,18 +1,25 @@
 package org.matsim.project.drtRequestPatternIdentification.prepare;
 
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
+import org.matsim.api.core.v01.population.Population;
 import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
 import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.CoordUtils;
+import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -28,14 +35,31 @@ public class LinkZoneMap {
 //        linkZoneMap(config);
 //    }
 
-    public static Map<Id<Link>,Integer> linkZoneMap(Network network){
+    private static final Logger log = LogManager.getLogger(LinkZoneMap.class);
 
+    public static Map<Id<Link>,Integer> linkZoneMap(Network network, Population population){
+
+        log.info("---------------------------------------");
+        log.info("trip average distance is started calculating...");
+        double totalDistance = 0;
+        List<DrtDemand> drtDemands = DrtDemandsList.getDrtDemandsList(network, population);
+//        System.out.println("there are " + drtDemands.size() + " demands");
+        //得到该场景的drt行驶总距离
+        for (DrtDemand demand : drtDemands){
+            double distance = CoordUtils.calcEuclideanDistance(demand.fromLink().getToNode().getCoord(), demand.toLink().getToNode().getCoord());//该demand的行程距离
+//            System.out.println("this demand is: " + distance + " meters");
+            totalDistance += distance;
+        }
+        double averageDistance = totalDistance / drtDemands.size();
+        log.info("trip average distance was successfully created");
+        log.info("---------------------------------------");
 
         // 获取网络的边界坐标
         Coord minCoord = getMinCoord(network);
         Coord maxCoord = getMaxCoord(network);
 
-        double zoneSize = 1000.0; // 1km的正方形区域边长
+        double zoneSize = averageDistance * 0.1; // 平均行驶里程的10%作为zone的尺寸
+        log.info("zone size of this network is: " + zoneSize);
         double minX = minCoord.getX();
         double minY = minCoord.getY();
         double maxX = maxCoord.getX();
@@ -44,16 +68,18 @@ public class LinkZoneMap {
 
         Map<Id<Link>,Integer> linkZoneMap = new HashMap<>();//创建一个map，以Link为map中的key，Link所在的Zone作为value
 
+        log.info("---------------------------------------");
+        log.info("link zone map is started creating...");
         for (double x = minX; x < maxX; x += zoneSize) {
             for (double y = minY; y < maxY; y += zoneSize) {
                 Coord zoneMinCoord = new Coord(x, y);
                 Coord zoneMaxCoord = new Coord(x + zoneSize, y + zoneSize);
 
-                //遍历所有link，并通过link的start node判断link是否在当前zone中,将link按照zone分类
+                //遍历所有link，并通过link的to node判断link是否在当前zone中,将link按照zone分类
                 for(Link link: network.getLinks().values()){
 //                    String linkIdString = link.getId().toString();//linkId作为字符串
                     Id<Link> linkId = link.getId();//linkId作为id类
-                    Coord startCoord = link.getFromNode().getCoord();
+                    Coord startCoord = link.getToNode().getCoord();
                     if(zoneMaxCoord.getX() >= startCoord.getX() && startCoord.getX() >= zoneMinCoord.getX()
                             && zoneMaxCoord.getY() >= startCoord.getY() && startCoord.getY() >= zoneMinCoord.getY()){
                         linkZoneMap.put(linkId,zoneId);
@@ -69,8 +95,9 @@ public class LinkZoneMap {
 //            System.out.println(linkZoneMap.get(entry.getKey()));
 //        }
 
+        log.info("link zone map was successfully created");
+        log.info("---------------------------------------");
         return linkZoneMap;
-
     }
 
     private static Coord getMinCoord(Network network) {
