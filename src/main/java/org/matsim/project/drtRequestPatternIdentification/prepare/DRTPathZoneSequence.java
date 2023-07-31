@@ -61,11 +61,11 @@ public class DRTPathZoneSequence {
         log.info("drt trip list was successfully created");
         log.info("---------------------------------------");
 
-        Map<Integer, List<Integer>> tripPathZoneMap = new HashMap<>();
-        Map<Integer, DrtDemand> tripNumberMap = new HashMap<>();
-        Map<List<Integer>, DrtDemand> demandPathMap = new HashMap<>();
+        Map<Integer, List<Integer>> tripPathZoneMap = new LinkedHashMap<>();
+        Map<Integer, DrtDemand> tripNumberMap = new LinkedHashMap<>();
+        Map<List<Integer>, DrtDemand> demandPathMap = new LinkedHashMap<>();
         Map<Id<Link>,Integer> linkZoneMap = LinkZoneMap.linkZoneMap(network, population);//获取link对应的zone的map
-        Map<String, Object> tripInfoMap = new HashMap<>();
+        Map<String, Object> tripInfoMap = new LinkedHashMap<>();
 
         List<List<Integer>> listOfUniquePathZoneList = new ArrayList<>(); //保存所有demand行驶经过的zone列表，用于长短demand排序
 
