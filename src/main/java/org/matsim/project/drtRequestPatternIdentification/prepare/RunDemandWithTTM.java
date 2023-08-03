@@ -71,9 +71,9 @@ public class RunDemandWithTTM {
         double numOfMatchK32 = 0;
         double numOfMatchK33 = 0;
         double totalTravelTime = 0;
-        double pooledTravelTimeK22 = 0;
-        double pooledTravelTimeK32 = 0;
-        double pooledTravelTimeK33 = 0;
+        double savingTravelTimeK22 = 0;
+        double savingTravelTimeK32 = 0;
+        double savingTravelTimeK33 = 0;
 
         //(K=2) 空间上和时间上判断两个行程是否match
         HashSet<Integer> pooledDemandK22 = new HashSet<>();
@@ -133,7 +133,7 @@ public class RunDemandWithTTM {
                                 numOfMatchK22++;
                                 pooledDemandK22.add(i);//demand i作为 supplier 已经被分配了，加入该列表，之后跳过
                                 pooledDemandK22.add(j);//demand j作为 demander 已经被分配，加入该列表，之后跳过
-                                pooledTravelTimeK22 += supplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - supplier.departureTime()) ;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中 (两段各自的direct时间之和 - o1到d1的时间)
+                                savingTravelTimeK22 += supplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - supplier.departureTime()) ;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中 (两段各自的direct时间之和 - o1到d1的时间)
                                 break;
                             }
                         }
@@ -147,7 +147,7 @@ public class RunDemandWithTTM {
         int numOfTotalDemands = drtDemands.size();
 //        double shareRate = (double) numOfMatch / numOfTotalPairs * 100;
         double rateOfSavingCar = numOfMatchK22 / numOfTotalDemands * 100;
-        double rateOfSavingTime = pooledTravelTimeK22 / totalTravelTime * 100;
+        double rateOfSavingTime = savingTravelTimeK22 / totalTravelTime * 100;
 
 //        log.info("number of total pairs is: " + numOfTotalPairs);
         log.info("---------------------------------------");
@@ -156,7 +156,7 @@ public class RunDemandWithTTM {
         log.info("number of match is: " + numOfMatchK22);
         log.info("---------------------------------------");
         log.info("total travel time is: " + totalTravelTime);
-        log.info("saving travel time is: " + pooledTravelTimeK22);
+        log.info("saving travel time is: " + savingTravelTimeK22);
 //        log.info("trip share rate is: " + shareRate + "%");
         log.info("---------------------------------------");
         log.info("rate of saving car is: " + rateOfSavingCar + "%");
@@ -299,7 +299,7 @@ public class RunDemandWithTTM {
                                                 pooledDemandK33.add(x);
                                                 pooledDemandK33.add(y);
                                                 pooledDemandK33.add(z);
-                                                pooledTravelTimeK33 += mainSupplierDirectTravelTime + subSupplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - mainSupplier.departureTime()); //三段各自direct的时间之和 - (d1的实际到达时间 - o1的出发时间)
+                                                savingTravelTimeK33 += mainSupplierDirectTravelTime + subSupplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - mainSupplier.departureTime()); //三段各自direct的时间之和 - (d1的实际到达时间 - o1的出发时间)
 //                                                log.info(x + "," + y + "," + z);
                                                 break outerLoop;
                                             }
@@ -331,9 +331,9 @@ public class RunDemandWithTTM {
             List<Integer> supplierPathZoneList = tripPathZoneMap.get(i);
             DrtDemand supplier = tripNumberMap.get(i);//get demand 1 （supplier）
 
-            double supplierDirectTravelTime1 = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.toLink(), supplier.departureTime());
+            double supplierDirectTravelTime = travelTimeMatrix.getTravelTime(supplier.fromLink(), supplier.toLink(), supplier.departureTime());
             double supplierLatestDepartureTime = supplier.departureTime() + maxWaitTime;
-            double supplierLatestArrivalTime = supplier.departureTime() + alpha * supplierDirectTravelTime1 + beta;
+            double supplierLatestArrivalTime = supplier.departureTime() + alpha * supplierDirectTravelTime + beta;
 
 
             for (int j = i+ 1; j <= tripPathZoneMap.size(); j++){
@@ -377,7 +377,7 @@ public class RunDemandWithTTM {
                                 numOfMatchK32++;
                                 pooledDemandK32.add(i);//demand i作为 supplier 已经被分配了，加入该列表，之后跳过
                                 pooledDemandK32.add(j);//demand j作为 demander 已经被分配，加入该列表，之后跳过
-                                pooledTravelTimeK32 += demanderDirectTravelTime;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中
+                                savingTravelTimeK32 += supplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - supplier.departureTime());//(两段各自的direct时间之和 - o1到d1的时间)
                                 break;
                             }
                         }
@@ -393,7 +393,7 @@ public class RunDemandWithTTM {
 //        int numOfTotalDemands = drtDemands.size();
 //        double shareRate = (double) numOfMatch / numOfTotalPairs * 100;
         double rateOfSavingCarK3 = (numOfMatchK32 + numOfMatchK33 * 2) / numOfTotalDemands * 100;
-        double rateOfSavingTimeK3 = (pooledTravelTimeK32 + pooledTravelTimeK33) / totalTravelTime * 100;
+        double rateOfSavingTimeK3 = (savingTravelTimeK32 + savingTravelTimeK33) / totalTravelTime * 100;
 
 //        log.info("number of total pairs is: " + numOfTotalPairs);
         log.info("---------------------------------------");
@@ -403,8 +403,8 @@ public class RunDemandWithTTM {
         log.info("number of match (shared by 3 trips) is: " + numOfMatchK33);
         log.info("---------------------------------------");
         log.info("total travel time is: " + totalTravelTime);
-        log.info("saving travel time (shared by 2 trips) is: " + pooledTravelTimeK32);
-        log.info("saving travel time (shared by 3 trips) is: " + pooledTravelTimeK33);
+        log.info("saving travel time (shared by 2 trips) is: " + savingTravelTimeK32);
+        log.info("saving travel time (shared by 3 trips) is: " + savingTravelTimeK33);
 //        log.info("trip share rate is: " + shareRate + "%");
         log.info("---------------------------------------");
         log.info("rate of saving car is: " + rateOfSavingCarK3 + "%");
