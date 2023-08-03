@@ -29,7 +29,7 @@ public class RunDemandWithTTM {
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Vulkaneifel\\vulkaneifel-v1.0-25pct.config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Oranienburg\\oranienburg_drt_config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -133,7 +133,7 @@ public class RunDemandWithTTM {
                                 numOfMatchK22++;
                                 pooledDemandK22.add(i);//demand i作为 supplier 已经被分配了，加入该列表，之后跳过
                                 pooledDemandK22.add(j);//demand j作为 demander 已经被分配，加入该列表，之后跳过
-                                pooledTravelTimeK22 += demanderDirectTravelTime;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中
+                                pooledTravelTimeK22 += supplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - supplier.departureTime()) ;//demand 2 (demander)成功拼车，行驶时间计算进pooled的时间中 (两段各自的direct时间之和 - o1到d1的时间)
                                 break;
                             }
                         }
@@ -299,7 +299,7 @@ public class RunDemandWithTTM {
                                                 pooledDemandK33.add(x);
                                                 pooledDemandK33.add(y);
                                                 pooledDemandK33.add(z);
-                                                pooledTravelTimeK33 += demanderDirectTravelTime + subSupplierDirectTravelTime;
+                                                pooledTravelTimeK33 += mainSupplierDirectTravelTime + subSupplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - mainSupplier.departureTime()); //三段各自direct的时间之和 - (d1的实际到达时间 - o1的出发时间)
 //                                                log.info(x + "," + y + "," + z);
                                                 break outerLoop;
                                             }
