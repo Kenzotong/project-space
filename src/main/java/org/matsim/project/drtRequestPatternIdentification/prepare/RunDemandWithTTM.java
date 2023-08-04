@@ -29,7 +29,7 @@ public class RunDemandWithTTM {
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Oranienburg\\oranienburg_drt_config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Berlin-DRT-random-selection\\berlin_drt_config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -319,6 +319,7 @@ public class RunDemandWithTTM {
 
         HashSet<Integer> pooledDemandK32 = new HashSet<>();//收集已经匹配的demand
 
+        //剩下的两两配对
         for (int i = 1; i <= tripPathZoneMap.size(); i++){
             //检查supplier(长)是否在k=3时已经被分配了
             if(pooledDemandK33.contains(i)){
