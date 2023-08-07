@@ -29,7 +29,7 @@ public class RunDemandWithTTM {
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Berlin-DRT-random-selection\\berlin_drt_config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Kelheim\\kelheim-drt-config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }

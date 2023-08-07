@@ -18,17 +18,16 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.Tools;
 import org.matsim.project.utils.LinkToLinkTravelTimeMatrix;
-import scala.Int;
 
 import java.util.*;
 
-public class RunDemandQuantificationK4 {
+public class RunDemandQuantificationK4NoMap {
     private static final Logger log = LogManager.getLogger(RunDemandWithTTM.class);
 
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Kelheim\\kelheim-drt-config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Berlin-DRT-random-selection\\berlin_drt_config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -80,7 +79,7 @@ public class RunDemandQuantificationK4 {
         log.info("start matching (shared by 2 trips AND 3 trips AND 4 trips)...");
         log.info("shareable trip pairs map is started creating (shared by 2 trips)...");
 
-        //收集所有可共享的两两配对
+        /*//收集所有可共享的两两配对
         Map<Integer,List<Integer>> shareableTwoTripMap = new LinkedHashMap<>();//key为supplier，value为demander,有顺序的
         for (int i = 1; i <= tripPathZoneMap.size(); i++){
             List<Integer> shareableTrips = new ArrayList<>();
@@ -193,7 +192,7 @@ public class RunDemandQuantificationK4 {
                                             double arrivalTimeD1 = now + d2d1;
                                             //d1的到达时间 <= d1最晚到达
                                             if (arrivalTimeD1 <= mainSupplierLatestArrivalTime) {
-                                               shareableTrips.add(z);//把可以匹配的demander加入列表
+                                                shareableTrips.add(z);//把可以匹配的demander加入列表
                                             }
                                         }
                                     }
@@ -214,37 +213,38 @@ public class RunDemandQuantificationK4 {
 
         log.info("shareable trip pairs map was successfully created (shared by 3 trips)");
         log.info("---------------------------------------------------------------------------------------------------------------------");
-        log.info("start matching (shared by 4 trips)...");
+        log.info("start matching (shared by 4 trips)...");*/
 
         //TODO 进行k=4的配对（利用已知的K=3的配对组合来筛选）
         //判断空间上4个demand是否匹配
         HashSet<Integer> pooledDemandK44 = new HashSet<>();//收集已经匹配的demand
-        for (int a : shareableThreeTripsMap.keySet()){
+        for (int a = 1; a <= drtDemands.size(); a++){
             //判断是否匹配过了
             if (pooledDemandK44.contains(a)){
                 continue;
             }
-            outerLoop: for(int b : shareableThreeTripsMap.get(a).keySet()){
+            List<Integer> pathListA = tripPathZoneMap.get(a);
+            outerLoop: for(int b = a + 1; b <= drtDemands.size(); b++){
                 //判断是否匹配过了
                 if (pooledDemandK44.contains(b)){
                     continue;
                 }
-                if (shareableThreeTripsMap.containsKey(b)) {
-
-                    for (int i = 0; i <= shareableThreeTripsMap.get(a).get(b).size() - 1; i++) {
-                        int c = shareableThreeTripsMap.get(a).get(b).get(i);
+                List<Integer> pathListB = tripPathZoneMap.get(b);
+                if(Collections.indexOfSubList(pathListA, pathListB) != -1){//判断a的行程是否包含b的行程 -> 空间上两个demand可以match
+                    for (int c = b + 1; c <= drtDemands.size(); c++) {
                         //判断是否匹配过了
                         if (pooledDemandK44.contains(c)) {
                             continue;
                         }
-                        if(shareableThreeTripsMap.get(b).containsKey(c)){
-                            for(int j = 0; j <= shareableThreeTripsMap.get(b).get(c).size() - 1; j++){
-                                int d = shareableThreeTripsMap.get(b).get(c).get(j);
+                        List<Integer> pathListC = tripPathZoneMap.get(c);
+                        if(Collections.indexOfSubList(pathListB, pathListC) != -1){//判断b的行程是否包含c的行程 -> 空间上两个demand可以match
+                            for(int d = c + 1; d <= drtDemands.size(); d++){
                                 //判断是否匹配过了
                                 if (pooledDemandK44.contains(d)){
                                     continue;
                                 }
-                                if (shareableThreeTripsMap.get(a).get(b).contains(d)){
+                                List<Integer> pathListD = tripPathZoneMap.get(d);
+                                if(Collections.indexOfSubList(pathListC, pathListD) != -1){//判断c的行程是否包含d的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
                                     //判断这4个trip在时间上是否match （顺序为o1,o2,o3,o4,d4,d3,d2,d1）
                                     DrtDemand demand1 = tripNumberMap.get(a);//得到第1长的demand
                                     double demand1DirectTravelTime = travelTimeMatrix.getTravelTime(demand1.fromLink(), demand1.toLink(), demand1.departureTime());
@@ -265,6 +265,8 @@ public class RunDemandQuantificationK4 {
                                     double demand4DirectTravelTime = travelTimeMatrix.getTravelTime(demand4.fromLink(), demand4.toLink(), demand4.departureTime());
                                     double demand4LatestDepartureTime = demand4.departureTime() + maxWaitTime;
                                     double demand4LatestArrivalTime = demand4.departureTime() + alpha * demand4DirectTravelTime + beta;
+
+                                    totalTravelTime += demand1DirectTravelTime;
 
                                     //O2的最晚出发时间 > O1出发从O1到O2的到达时间（理想情况）
                                     double now = demand1.departureTime() + stopDuration;
@@ -329,28 +331,27 @@ public class RunDemandQuantificationK4 {
 
         //判断剩下的demands在空间上3个demand是否匹配
         HashSet<Integer> pooledDemandK43 = new HashSet<>();//收集已经匹配的demand
-        for (int x : shareableTwoTripMap.keySet()){
+        for (int x = 1; x <= drtDemands.size(); x++){
             //判断是否已经匹配过了
             if (pooledDemandK44.contains(x) || pooledDemandK43.contains(x)){
                 continue;
             }
-
-            outerLoop: for (int i = 0; i <= shareableTwoTripMap.get(x).size() - 1; i++) {
-                int y = shareableTwoTripMap.get(x).get(i);
+            List<Integer> pathListX = tripPathZoneMap.get(x);
+            outerLoop: for (int y = x + 1; y <= drtDemands.size(); y++) {
                 //判断是否已经匹配过了
                 if (pooledDemandK44.contains(y) || pooledDemandK43.contains(y)){
                     continue;
                 }
-
-                if (shareableTwoTripMap.containsKey(y)) {
-                    for (int j = 0; j <= shareableTwoTripMap.get(y).size() - 1; j++) {
-                        int z = shareableTwoTripMap.get(y).get(j);
+                List<Integer> pathListY = tripPathZoneMap.get(y);
+                if(Collections.indexOfSubList(pathListX, pathListY) != -1){//判断x的行程是否包含y的行程 -> 空间上两个demand可以match
+                    for (int z = y + 1; z <= drtDemands.size(); z++) {
                         //判断是否已经匹配过了
                         if (pooledDemandK44.contains(z) || pooledDemandK43.contains(z)){
                             continue;
                         }
+                        List<Integer> pathListZ = tripPathZoneMap.get(z);
+                        if(Collections.indexOfSubList(pathListY, pathListZ) != -1){//判断x的行程是否包含y的行程 -> 空间上两个demand可以match
 
-                        if (shareableTwoTripMap.get(x).contains(z)) {
                             //判断这三个trip在时间上是否match （o1,o2,o3,d3,d2,d1）
                             DrtDemand mainSupplier = tripNumberMap.get(x);//得到最长的demand
                             double mainSupplierDirectTravelTime = travelTimeMatrix.getTravelTime(mainSupplier.fromLink(), mainSupplier.toLink(), mainSupplier.departureTime());
@@ -417,7 +418,6 @@ public class RunDemandQuantificationK4 {
         //判断剩下的demands在空间上2个demand是否匹配
         HashSet<Integer> pooledDemandK42 = new HashSet<>();//收集已经匹配的demand
         for (int i = 1; i <= tripPathZoneMap.size(); i++){
-
             if (pooledDemandK44.contains(i) || pooledDemandK43.contains(i) || pooledDemandK42.contains(i)){
                 continue;
             }
