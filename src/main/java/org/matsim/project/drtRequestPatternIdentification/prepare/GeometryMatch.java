@@ -12,13 +12,12 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 
-import java.awt.*;
 import java.awt.geom.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class geometryMatch {
+public class GeometryMatch {
 
     public static void main(String[] args) {
         // Create scenario based on config file
