@@ -28,7 +28,7 @@ public class RunDemandQuantificationK4 {
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Kelheim\\kelheim-drt-config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\kelheim\\kelheim_drt_config.xml.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -224,6 +224,7 @@ public class RunDemandQuantificationK4 {
             if (pooledDemandK44.contains(a)){
                 continue;
             }
+
             outerLoop: for(int b : shareableThreeTripsMap.get(a).keySet()){
                 //判断是否匹配过了
                 if (pooledDemandK44.contains(b)){

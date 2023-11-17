@@ -29,7 +29,7 @@ public class RunDemandWithTTM {
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Kelheim\\kelheim-drt-config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\\\vulkaneifel\\vulkaneifel_drt_config-5.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -166,7 +166,7 @@ public class RunDemandWithTTM {
 
 
 
-       //(K=3) 空间上和时间上判断三个行程是否match
+       /*//(K=3) 空间上和时间上判断三个行程是否match
         log.info("-----------------------------------------------------------------------------------------------------------------------");
         log.info("start matching (shared by 2 trips AND 3 trips)...");
 
@@ -226,6 +226,11 @@ public class RunDemandWithTTM {
             }
 //            log.info("shareable trip pairs map was: " + shareableTripPairsMap);
         }
+        boolean a = shareableTripPairsMap.get(1).contains(2876);
+        boolean b = shareableTripPairsMap.get(2876).contains(4637);
+
+        log.info(a + ", " + b);
+
 
         log.info("shareable trip pairs map was successfully created (shared by 2 trips)");
         log.info("---------------------------------------");
@@ -300,7 +305,92 @@ public class RunDemandWithTTM {
                                                 pooledDemandK33.add(y);
                                                 pooledDemandK33.add(z);
                                                 savingTravelTimeK33 += mainSupplierDirectTravelTime + subSupplierDirectTravelTime + demanderDirectTravelTime - (arrivalTimeD1 - mainSupplier.departureTime()); //三段各自direct的时间之和 - (d1的实际到达时间 - o1的出发时间)
-//                                                log.info(x + "," + y + "," + z);
+                                                log.info(x + "," + y + "," + z);
+                                                break outerLoop;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }*/
+        log.info("------------------------------------------------------------------------------");
+        //不用map计算k=3
+        log.info("matching (shared by 3 trips) starting...");
+        HashSet<Integer> pooledDemandK33 = new HashSet<>();
+
+        for (int x = 1; x <= drtDemands.size(); x++) {
+            //判断是否匹配过了
+            DrtDemand demand1 = tripNumberMap.get(x);//得到第1长的demand
+            double demand1DirectTravelTime = travelTimeMatrix.getTravelTime(demand1.fromLink(), demand1.toLink(), demand1.departureTime());
+
+//            totalTravelTime += demand1DirectTravelTime;
+
+            if (pooledDemandK33.contains(x)) {
+                continue;
+            }
+            List<Integer> pathListA = tripPathZoneMap.get(x);
+            outerLoop:
+            for (int y = x + 1; y <= drtDemands.size(); y++) {
+                //判断是否匹配过了
+                if (pooledDemandK33.contains(y)) {
+                    continue;
+                }
+                List<Integer> pathListB = tripPathZoneMap.get(y);
+                if (Collections.indexOfSubList(pathListA, pathListB) != -1) {//判断x的行程是否包含y的行程 -> 空间上两个demand可以match
+                    for (int z = y + 1; z <= drtDemands.size(); z++) {
+                        //判断是否匹配过了
+                        if (pooledDemandK33.contains(z)) {
+                            continue;
+                        }
+                        List<Integer> pathListC = tripPathZoneMap.get(z);
+                        if (Collections.indexOfSubList(pathListB, pathListC) != -1) {//判断y的行程是否包含z的行程 -> 空间上两个demand可以match
+                            double demand1LatestDepartureTime = demand1.departureTime() + maxWaitTime;
+                            double demand1LatestArrivalTime = demand1.departureTime() + alpha * demand1DirectTravelTime + beta;
+
+                            DrtDemand demand2 = tripNumberMap.get(y);//得到第2长的demand
+                            double demand2DirectTravelTime = travelTimeMatrix.getTravelTime(demand2.fromLink(), demand2.toLink(), demand2.departureTime());
+                            double demand2LatestDepartureTime = demand2.departureTime() + maxWaitTime;
+                            double demand2LatestArrivalTime = demand2.departureTime() + alpha * demand2DirectTravelTime + beta;
+
+                            DrtDemand demand3 = tripNumberMap.get(z);//得到第3长的demand
+                            double demand3DirectTravelTime = travelTimeMatrix.getTravelTime(demand3.fromLink(), demand3.toLink(), demand3.departureTime());
+                            double demand3LatestDepartureTime = demand3.departureTime() + maxWaitTime;
+                            double demand3LatestArrivalTime = demand3.departureTime() + alpha * demand3DirectTravelTime + beta;
+
+                            double now = demand1.departureTime() + stopDuration;
+                            double o1o2 = travelTimeMatrix.getTravelTime(demand1.fromLink(), demand2.fromLink(), now);
+                            double arrivalTimeO2 = now + o1o2; //o2 实际到达时间
+                            //o2的到达时间 <= o2最晚出发时间
+                            if (arrivalTimeO2 <= demand2LatestDepartureTime) {
+                                now = arrivalTimeO2 + stopDuration;
+                                double o2o3 = travelTimeMatrix.getTravelTime(demand2.fromLink(), demand3.fromLink(), now);
+                                double arrivalTimeO3 = now + o2o3;
+                                //o3的到达时间 <= o3最晚出发时间
+                                if (arrivalTimeO3 <= demand3LatestDepartureTime) {
+                                    now = arrivalTimeO3 + stopDuration;
+                                    double arrivalTimeD3 = now + demand3DirectTravelTime;
+                                    //o3到d3的时间 <= demand3的最晚到达
+                                    if (arrivalTimeD3 <= demand3LatestArrivalTime) {
+                                        now = arrivalTimeD3 + stopDuration;
+                                        double d3d2 = travelTimeMatrix.getTravelTime(demand3.toLink(), demand2.toLink(), now);
+                                        double arrivalTimeD2 = now + d3d2;
+                                        //d3到d2的时间 <= demand2的最晚到达
+                                        if (arrivalTimeD2 <= demand2LatestArrivalTime) {
+                                            now = arrivalTimeD2 + stopDuration;
+                                            double d2d1 = travelTimeMatrix.getTravelTime(demand2.toLink(), demand1.toLink(), now);
+                                            double arrivalTimeD1 = now + d2d1;
+                                            //d2到d1的时间 <= demand1的最晚到达
+                                            if (arrivalTimeD1 <= demand1LatestArrivalTime) {
+                                                numOfMatchK33++;
+                                                pooledDemandK33.add(x);
+                                                pooledDemandK33.add(y);
+                                                pooledDemandK33.add(z);
+//                                                log.info(x + ", " + y + ", " + z);
+                                                savingTravelTimeK33 += demand1DirectTravelTime + demand2DirectTravelTime + demand3DirectTravelTime - (arrivalTimeD1 - demand1.departureTime()); //3段各自direct的时间之和 - (d1的实际到达时间 - o1的出发时间)
                                                 break outerLoop;
                                             }
                                         }

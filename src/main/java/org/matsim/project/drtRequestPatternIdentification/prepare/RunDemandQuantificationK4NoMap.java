@@ -27,7 +27,7 @@ public class RunDemandQuantificationK4NoMap {
     public static void main(String[] args) {
 
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Berlin-DRT-random-selection\\berlin_drt_config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\kelheim\\kelheim_drt_config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -220,6 +220,11 @@ public class RunDemandQuantificationK4NoMap {
         HashSet<Integer> pooledDemandK44 = new HashSet<>();//收集已经匹配的demand
         for (int a = 1; a <= drtDemands.size(); a++){
             //判断是否匹配过了
+            DrtDemand demand1 = tripNumberMap.get(a);//得到第1长的demand
+            double demand1DirectTravelTime = travelTimeMatrix.getTravelTime(demand1.fromLink(), demand1.toLink(), demand1.departureTime());
+
+            totalTravelTime += demand1DirectTravelTime;
+
             if (pooledDemandK44.contains(a)){
                 continue;
             }
@@ -246,8 +251,8 @@ public class RunDemandQuantificationK4NoMap {
                                 List<Integer> pathListD = tripPathZoneMap.get(d);
                                 if(Collections.indexOfSubList(pathListC, pathListD) != -1){//判断c的行程是否包含d的行程 -> 空间上两个demand可以match -> 进而再从时间上判断
                                     //判断这4个trip在时间上是否match （顺序为o1,o2,o3,o4,d4,d3,d2,d1）
-                                    DrtDemand demand1 = tripNumberMap.get(a);//得到第1长的demand
-                                    double demand1DirectTravelTime = travelTimeMatrix.getTravelTime(demand1.fromLink(), demand1.toLink(), demand1.departureTime());
+//                                    DrtDemand demand1 = tripNumberMap.get(a);//得到第1长的demand
+//                                    double demand1DirectTravelTime = travelTimeMatrix.getTravelTime(demand1.fromLink(), demand1.toLink(), demand1.departureTime());
                                     double demand1LatestDepartureTime = demand1.departureTime() + maxWaitTime;
                                     double demand1LatestArrivalTime = demand1.departureTime() + alpha * demand1DirectTravelTime + beta;
 
@@ -266,7 +271,9 @@ public class RunDemandQuantificationK4NoMap {
                                     double demand4LatestDepartureTime = demand4.departureTime() + maxWaitTime;
                                     double demand4LatestArrivalTime = demand4.departureTime() + alpha * demand4DirectTravelTime + beta;
 
-                                    totalTravelTime += demand1DirectTravelTime;
+                                    System.currentTimeMillis();
+
+//                                    totalTravelTime += demand1DirectTravelTime;
 
                                     //O2的最晚出发时间 > O1出发从O1到O2的到达时间（理想情况）
                                     double now = demand1.departureTime() + stopDuration;
