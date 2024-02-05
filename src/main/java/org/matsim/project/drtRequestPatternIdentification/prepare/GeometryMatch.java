@@ -21,7 +21,7 @@ public class GeometryMatch {
 
     public static void main(String[] args) {
         // Create scenario based on config file
-        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\new-york-manhattan\\manhattan_drt_config.xml";
+        String configPath = "D:\\Thesis\\drt-scenarios\\drt-scenarios\\Berlin\\berlin_drt_config.xml";
         if (args.length != 0) {
             configPath = args[0];
         }
@@ -73,6 +73,7 @@ public class GeometryMatch {
         int width = 500;
         double sumArea1 = 0;
         double sumArea2 = 0;
+        double sumLength = 0;
 
         //按照time bin来储存所有trip形成的line所覆盖的面积
         for (TripStructureUtils.Trip trip : drtTripSet){
@@ -89,6 +90,7 @@ public class GeometryMatch {
             Point2D toPoint = new Point2D.Double(x2, y2);
 
             double length = fromPoint.distance(toPoint);
+            sumLength = sumLength + length;
 
             //获取线段的夹角(弧度)
             double angle = Math.atan2(y2 - y1, x2 - x1);
@@ -122,11 +124,11 @@ public class GeometryMatch {
             System.out.println("length is: " + length + ", and length should be: " + length1);*/
 
             //分象限来确定第每个时间段的矩形
-            //线段在第二、三象限
-            if (angle <= 0) {
+            //线段在第一、二象限
+            if (angle >= 0) {
                 //第一个time bin中左上角坐标
-                double xNew = x1 - width * Math.sin(absAngle);
-                double yNew = y1 - width * Math.cos(absAngle);
+                double xNew = x1 - width * Math.sin(angle);
+                double yNew = y1 + width * Math.cos(angle);
                 for (int timeBinNum = timeBinDeparture; timeBinNum <= timeBinArrival; timeBinNum++) {
                     //计算第一个time bin
                     if (timeBinNum == timeBinDeparture) {
@@ -134,28 +136,28 @@ public class GeometryMatch {
                         Rectangle2D rectangle = new Rectangle2D.Double(xNew, yNew, 2 * width, travelDistanceInFirstTimeBin);
                         //以左上角坐标为中心并且旋转对应角度
                         AffineTransform transform = new AffineTransform();
-                        transform.rotate(Math.PI / 2 - absAngle, xNew, yNew);
+                        transform.rotate(angle - Math.PI / 2, xNew, yNew);
                         Rectangle2D rotatedRectangle = transform.createTransformedShape(rectangle).getBounds2D();
-/*                        //获取面积
-                        double area = rectangle.getHeight() * rectangle.getWidth();
-                        double areaTest = 2 * width * travelDistanceInFirstTimeBin;
-                        System.out.println("this area is: " + area + ", and this area should be: " + areaTest);
-                        sumArea2 = sumArea2 + area;*/
+                        //获取面积
+                        double area = rotatedRectangle.getBounds2D().getHeight() * rotatedRectangle.getBounds2D().getWidth();
+//                        double areaTest = 2 * width * travelDistanceInFirstTimeBin;
+//                        System.out.println("this area is: " + area + ", and this area should be: " + areaTest);
+                        sumArea2 = sumArea2 + area;
                         //把第一个time bin对应的矩形添加进去
                         timeBinAreaMap.put(timeBinNum, rotatedRectangle);
                     }
                     //计算最后一个time bin
                     if (timeBinNum == timeBinArrival){
                         //斜边的长度
-                        double hypotenuse = travelDistanceInFirstTimeBin + speed * timeBin * (timeBinArrival - timeBinDeparture - 1);
+                        double hypotenuse = travelDistanceInFirstTimeBin + travelDistanceInThisTimeBin * (timeBinArrival - timeBinDeparture - 1);
                         //计算最后左上角坐标
-                        double xTopLift = xNew + hypotenuse * Math.cos(absAngle);
-                        double yTopLift = yNew + hypotenuse * Math.sin(absAngle);
+                        double xTopLift = xNew + hypotenuse * Math.cos(angle);
+                        double yTopLift = yNew + hypotenuse * Math.sin(angle);
                         //创建矩形
                         Rectangle2D rectangle = new Rectangle2D.Double(xTopLift, yTopLift, 2 * width, travelDistanceInLastTimeBin);
                         //以左上角坐标为中心并且旋转对应角度
                         AffineTransform transform = new AffineTransform();
-                        transform.rotate(Math.PI / 2 - absAngle, xTopLift, yTopLift);
+                        transform.rotate(angle - Math.PI / 2, xTopLift, yTopLift);
                         Rectangle2D rotatedRectangle = transform.createTransformedShape(rectangle).getBounds2D();
                         //获取面积
                         double area = rotatedRectangle.getBounds2D().getHeight() * rotatedRectangle.getBounds2D().getWidth();
@@ -165,15 +167,15 @@ public class GeometryMatch {
                     }
                     else {
                         //斜边的长度
-                        double hypotenuse = travelDistanceInFirstTimeBin + speed * timeBin * (timeBinArrival - timeBinDeparture - 2);
+                        double hypotenuse = travelDistanceInFirstTimeBin + travelDistanceInThisTimeBin * (timeBinNum - timeBinDeparture - 1);
                         //计算左上角坐标
-                        double xTopLift = xNew + hypotenuse * Math.cos(absAngle);
-                        double yTopLift = yNew + hypotenuse * Math.sin(absAngle);
+                        double xTopLift = xNew + hypotenuse * Math.cos(angle);
+                        double yTopLift = yNew + hypotenuse * Math.sin(angle);
                         //创建矩形
                         Rectangle2D rectangle = new Rectangle2D.Double(xTopLift, yTopLift, 2 * width, travelDistanceInThisTimeBin);
                         //以左上角坐标为中心并且旋转对应角度
                         AffineTransform transform = new AffineTransform();
-                        transform.rotate(Math.PI / 2 - absAngle, xTopLift, yTopLift);
+                        transform.rotate(angle - Math.PI / 2, xTopLift, yTopLift);
                         Rectangle2D rotatedRectangle = transform.createTransformedShape(rectangle).getBounds2D();
                         //获取面积
                         double area = rotatedRectangle.getBounds2D().getHeight() * rotatedRectangle.getBounds2D().getWidth();
@@ -184,8 +186,8 @@ public class GeometryMatch {
                 }
             }
 
-            //线段在第一、四象限
-             if (angle > 0){
+            //线段在第三、四象限
+             if (angle < 0){
                  //第一个time bin中左上角坐标
                  double x0 = x1 + travelDistanceInFirstTimeBin * Math.cos(absAngle);
                  double y0 = y1 - travelDistanceInFirstTimeBin * Math.sin(absAngle);
@@ -198,7 +200,7 @@ public class GeometryMatch {
                          Rectangle2D rectangle = new Rectangle2D.Double(xNew, yNew, 2 * width, travelDistanceInFirstTimeBin);
                          //以左上角坐标为中心并且旋转对应角度
                          AffineTransform transform = new AffineTransform();
-                         transform.rotate(absAngle - Math.PI / 2, xNew, yNew);
+                         transform.rotate(Math.PI / 2 - absAngle, xNew, yNew);
                          Rectangle2D rotatedRectangle = transform.createTransformedShape(rectangle).getBounds2D();
                          //获取面积
                          double area = rotatedRectangle.getBounds2D().getHeight() * rotatedRectangle.getBounds2D().getWidth();
@@ -209,7 +211,7 @@ public class GeometryMatch {
                      //计算最后一个time bin
                      if (timeBinNum == timeBinArrival){
                          //斜边的长度
-                         double hypotenuse = travelDistanceInLastTimeBin + speed * timeBin * (timeBinArrival - timeBinDeparture - 1);
+                         double hypotenuse = travelDistanceInLastTimeBin + travelDistanceInThisTimeBin * (timeBinArrival - timeBinDeparture - 1);
                          //计算最后左上角坐标
                          double xTopLift = xNew + hypotenuse * Math.cos(absAngle);
                          double yTopLift = yNew - hypotenuse * Math.sin(absAngle);
@@ -217,7 +219,7 @@ public class GeometryMatch {
                          Rectangle2D rectangle = new Rectangle2D.Double(xTopLift, yTopLift, 2 * width, travelDistanceInLastTimeBin);
                          //以左上角坐标为中心并且旋转对应角度
                          AffineTransform transform = new AffineTransform();
-                         transform.rotate(absAngle - Math.PI / 2, xTopLift, yTopLift);
+                         transform.rotate(Math.PI / 2 - absAngle, xTopLift, yTopLift);
                          Rectangle2D rotatedRectangle = transform.createTransformedShape(rectangle).getBounds2D();
                          //获取面积
                          double area = rotatedRectangle.getBounds2D().getHeight() * rotatedRectangle.getBounds2D().getWidth();
@@ -227,15 +229,15 @@ public class GeometryMatch {
                      }
                      else {
                          //斜边的长度
-                         double hypotenuse = travelDistanceInLastTimeBin + speed * timeBin * (timeBinArrival - timeBinDeparture - 2);
+                         double hypotenuse = travelDistanceInThisTimeBin * (timeBinNum - timeBinDeparture);
                          //计算左上角坐标
                          double xTopLift = xNew + hypotenuse * Math.cos(absAngle);
-                         double yTopLift = yNew + hypotenuse * Math.sin(absAngle);
+                         double yTopLift = yNew - hypotenuse * Math.sin(absAngle);
                          //创建矩形
                          Rectangle2D rectangle = new Rectangle2D.Double(xTopLift, yTopLift, 2 * width, travelDistanceInThisTimeBin);
                          //以左上角坐标为中心并且旋转对应角度
                          AffineTransform transform = new AffineTransform();
-                         transform.rotate(absAngle - Math.PI / 2, xTopLift, yTopLift);
+                         transform.rotate(Math.PI / 2 - absAngle, xTopLift, yTopLift);
                          Rectangle2D rotatedRectangle = transform.createTransformedShape(rectangle).getBounds2D();
                          //获取面积
                          double area = rotatedRectangle.getBounds2D().getHeight() * rotatedRectangle.getBounds2D().getWidth();
@@ -247,8 +249,12 @@ public class GeometryMatch {
             }
             lineTimeBinMap.put(line, timeBinAreaMap);
         }
-        System.out.println("检查是否所有line的time bin都存在了map中： 已存的line数量： " + lineTimeBinMap.size() + "， 应存数量为： " + drtTripSet.size());
-        System.out.println("检查两种面积计算的答案是否一致： 准确值： " + sumArea1 + "， 近似值： " + sumArea2);
+        System.out.println("number of all lines from this time bin map： number： " + lineTimeBinMap.size() + "， should be： " + drtTripSet.size());
+        System.out.println("Check that the answers to the two area calculations are consistent: accuracy value: " + sumArea1/1000000 + " km2" + "， approximation: " + sumArea2/1000000 + " km2");
+
+        //得到面积的转换系数，以确定精确值和近似值的关系
+        double areaFactor = sumArea1 / sumArea2;
+        System.out.println("area factor is: " + areaFactor);
 
         double sumIntersectionArea = 0;
 
@@ -256,16 +262,30 @@ public class GeometryMatch {
         for (TripStructureUtils.Trip trip1 : drtTripSet){
             Line2D line1 = line2DMap.get(trip1);
             Map<Integer, Rectangle2D> timeBinAreaMap1 = lineTimeBinMap.get(line1);
-            int trip1Index = drtTripSet.indexOf(trip1);
+//            int trip1Index = drtTripSet.indexOf(trip1);
+
+            //获得该line的面积
+            double x1 = line1.getX1();
+            double y1 = line1.getY1();
+            Point2D fromPoint = new Point2D.Double(x1, y1);
+            double x2 = line1.getX2();
+            double y2 = line1.getY2();
+            Point2D toPoint = new Point2D.Double(x2, y2);
+
+            double length = fromPoint.distance(toPoint);
+            double areaOfLine1 = 2 * width * length;
+
+            double intersectionAreaFromLine1 = 0;
+
             for (TripStructureUtils.Trip trip2 : drtTripSet){
                 Line2D line2 = line2DMap.get(trip2);
                 Map<Integer, Rectangle2D> timeBinAreaMap2 = lineTimeBinMap.get(line2);
-                int trip2Index = drtTripSet.indexOf(trip2);
-                if (trip1Index < trip2Index) {
+//                int trip2Index = drtTripSet.indexOf(trip2);
+                if (trip1 != trip2) {
                     //计算两个线段的夹角
                     double angle = getAngleBetweenLines(line1, line2);
                     //筛选同方向的两条line （夹角在0-90°）
-                    if (angle < Math.PI / 2) {
+                    if (angle <= Math.PI / 2) {
 
                         //计算同一个time bin中的重合面积
                         for (int timeBinNum : timeBinAreaMap1.keySet()) {
@@ -280,7 +300,13 @@ public class GeometryMatch {
 
                                 //获取交集的近似面积
                                 double intersectionArea = area1.isEmpty() ? 0 : area1.getBounds2D().getWidth() * area1.getBounds2D().getHeight();
-                                sumIntersectionArea = sumIntersectionArea + intersectionArea;
+                                //判断重合面积的和是否小于等于line1的面积
+                                intersectionAreaFromLine1 += intersectionArea * areaFactor * Math.cos(angle);
+                                if (intersectionAreaFromLine1 <= areaOfLine1) {
+                                    //近似面积与面积系数相乘，得到对应的精确值
+                                    sumIntersectionArea += intersectionArea * areaFactor * Math.cos(angle);
+                                }
+                                else break;
 
                             }
                         }
@@ -288,7 +314,8 @@ public class GeometryMatch {
                 }
             }
         }
-        System.out.println("该场景下重叠的面积为： " + sumIntersectionArea);
+        System.out.println("Intersection area of this scene is： " + sumIntersectionArea/2000000 + " km2");
+        System.out.println("Length of all lines is: " + sumLength/1000 + " km");
     }
 
     //计算两条line的夹角
