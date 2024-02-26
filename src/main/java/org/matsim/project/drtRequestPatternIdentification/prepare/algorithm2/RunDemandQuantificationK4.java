@@ -1,4 +1,4 @@
-package org.matsim.project.drtRequestPatternIdentification.prepare;
+package org.matsim.project.drtRequestPatternIdentification.prepare.algorithm2;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,8 +17,9 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.Tools;
+import org.matsim.project.drtRequestPatternIdentification.prepare.DrtDemandsList;
+import org.matsim.project.drtRequestPatternIdentification.prepare.RunDemandWithTTM;
 import org.matsim.project.utils.LinkToLinkTravelTimeMatrix;
-import scala.Int;
 
 import java.util.*;
 

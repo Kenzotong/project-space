@@ -1,4 +1,4 @@
-package org.matsim.project.drtRequestPatternIdentification.prepare;
+package org.matsim.project.drtRequestPatternIdentification.prepare.algorithm2;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -12,6 +12,7 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.Tools;
+import org.matsim.project.drtRequestPatternIdentification.prepare.DrtDemandsList;
 import org.matsim.project.utils.LinkToLinkTravelTimeMatrix;
 
 import java.util.Collections;

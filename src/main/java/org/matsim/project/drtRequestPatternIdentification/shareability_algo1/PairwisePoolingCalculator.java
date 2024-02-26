@@ -1,4 +1,4 @@
-package org.matsim.project.drtRequestPatternIdentification.shareability;
+package org.matsim.project.drtRequestPatternIdentification.shareability_algo1;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

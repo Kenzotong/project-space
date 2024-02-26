@@ -1,31 +1,4 @@
-package org.matsim.project.drtRequestPatternIdentification.shareability;
-
-import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.network.Link;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.Population;
-import org.matsim.application.analysis.DefaultAnalysisMainModeIdentifier;
-import org.matsim.contrib.drt.run.DrtConfigGroup;
-import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
-import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.router.MainModeIdentifier;
-import org.matsim.core.router.TripStructureUtils;
-import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
-import org.matsim.project.drtRequestPatternIdentification.run.ExampleCode;
-import org.matsim.project.utils.LinkToLinkTravelTimeMatrix;
-
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+package org.matsim.project.drtRequestPatternIdentification.shareability_algo1;
 
 @Deprecated
 public class ScoringBasedOnShareability {

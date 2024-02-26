@@ -1,26 +1,20 @@
-package org.matsim.project.drtRequestPatternIdentification.prepare;
+package org.matsim.project.drtRequestPatternIdentification.prepare.algorithm2;
 
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Population;
-import org.matsim.contrib.drt.run.DrtConfigGroup;
-import org.matsim.contrib.drt.run.MultiModeDrtConfigGroup;
-import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.contrib.dvrp.trafficmonitoring.QSimFreeSpeedTravelTime;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.router.costcalculators.OnlyTimeDependentTravelDisutility;
 import org.matsim.core.router.speedy.SpeedyALTFactory;
 import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
-import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
+import org.matsim.project.drtRequestPatternIdentification.prepare.DrtDemandsList;
 
 import java.util.*;
 

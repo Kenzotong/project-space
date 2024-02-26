@@ -8,6 +8,7 @@ import org.matsim.contrib.dvrp.run.DvrpConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.project.drtRequestPatternIdentification.prepare.algorithm2.ZonePoolingCalculator;
 
 
 //use travel time matrix, but there is a bug from Zone.zone.getId();

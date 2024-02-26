@@ -19,7 +19,7 @@ import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DemandsPatternCore;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
-import org.matsim.project.drtRequestPatternIdentification.shareability.PairwisePoolingCalculator;
+import org.matsim.project.drtRequestPatternIdentification.shareability_algo1.PairwisePoolingCalculator;
 
 import java.util.ArrayList;
 import java.util.List;
