@@ -18,6 +18,7 @@ import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
+import org.matsim.project.drtRequestPatternIdentification.prepare.algorithm1.DrtDemandsList;
 import org.matsim.project.drtRequestPatternIdentification.prepare.algorithm2.DRTPathZoneSequence;
 
 import java.util.*;

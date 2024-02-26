@@ -17,7 +17,7 @@ import org.matsim.core.router.util.TravelTime;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.Tools;
-import org.matsim.project.drtRequestPatternIdentification.prepare.DrtDemandsList;
+import org.matsim.project.drtRequestPatternIdentification.prepare.algorithm1.DrtDemandsList;
 import org.matsim.project.drtRequestPatternIdentification.prepare.RunDemandWithTTM;
 import org.matsim.project.utils.LinkToLinkTravelTimeMatrix;
 

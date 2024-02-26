@@ -11,7 +11,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.router.TripStructureUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.project.drtRequestPatternIdentification.prepare.DrtTripsSet;
+import org.matsim.project.drtRequestPatternIdentification.prepare.algorithm1.DrtTripsSet;
 
 import java.awt.geom.*;
 import java.util.HashMap;

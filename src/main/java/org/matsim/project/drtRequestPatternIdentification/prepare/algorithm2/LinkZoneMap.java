@@ -11,7 +11,7 @@ import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Population;
 import org.matsim.core.utils.geometry.CoordUtils;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
-import org.matsim.project.drtRequestPatternIdentification.prepare.DrtDemandsList;
+import org.matsim.project.drtRequestPatternIdentification.prepare.algorithm1.DrtDemandsList;
 
 import java.util.HashMap;
 import java.util.List;

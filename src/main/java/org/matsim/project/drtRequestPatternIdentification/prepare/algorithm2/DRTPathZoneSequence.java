@@ -14,7 +14,7 @@ import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.router.util.TravelTime;
 import org.matsim.project.drtRequestPatternIdentification.basicStructures.DrtDemand;
-import org.matsim.project.drtRequestPatternIdentification.prepare.DrtDemandsList;
+import org.matsim.project.drtRequestPatternIdentification.prepare.algorithm1.DrtDemandsList;
 
 import java.util.*;
 

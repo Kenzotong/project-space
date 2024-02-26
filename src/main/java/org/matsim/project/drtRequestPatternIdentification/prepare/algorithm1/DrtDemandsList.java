@@ -1,4 +1,4 @@
-package org.matsim.project.drtRequestPatternIdentification.prepare;
+package org.matsim.project.drtRequestPatternIdentification.prepare.algorithm1;
 
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
